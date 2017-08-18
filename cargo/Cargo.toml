@@ -1,0 +1,10 @@
+[package]
+name = "greetingd"
+version = "0.1.1"
+authors = ["fluffyemily <fluffyemily@mozilla.com>"]
+description = "Example static library project built for iOS"
+publish = false
+
+[lib]
+name = "greetings"
+crate-type = ["staticlib", "cdylib"]
