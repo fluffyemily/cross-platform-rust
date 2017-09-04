@@ -23,3 +23,23 @@ pub extern fn rust_greeting_free(s: *mut c_char) {
         CString::from_raw(s)
     };
 }
+
+/// Expose the JNI interface for android below
+#[cfg(target_os="android")]
+#[allow(non_snake_case)]
+pub mod android {
+    extern crate jni;
+
+    use super::*;
+    use self::jni::JNIEnv;
+    use self::jni::objects::{JClass, JString};
+    use self::jni::sys::{jstring};
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_greetings_RustGreetings_greeting(env: JNIEnv, _: JClass, java_pattern: JString) -> jstring {
+        let world = rust_greeting(env.get_string(java_pattern).expect("invalid pattern string").as_ptr());
+        let output = env.new_string(CStr::from_ptr(world).to_str().unwrap()).expect("Couldn't create java string!");
+
+        output.into_inner()
+    }
+}
