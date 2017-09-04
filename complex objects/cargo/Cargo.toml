@@ -1,0 +1,13 @@
+[package]
+name = "greetings"
+version = "0.1.1"
+authors = ["fluffyemily <fluffyemily@mozilla.com>"]
+description = "Example static library project built for iOS"
+publish = false
+
+[target.'cfg(target_os="android")'.dependencies]
+jni = { version = "0.5", default-features = false }
+
+[lib]
+name = "greetings"
+crate-type = ["staticlib", "cdylib"]
