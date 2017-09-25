@@ -1,9 +1,10 @@
-# cross-platform-rust
+# basic
 Example project showing a rust library running on multiple platforms.
 
-Current version shows a rust library running on an iOS app only. Android and web based examples are coming soon.
+Current version shows a simple rust library that passes only primatives running on an iOS and Android apps only. Web based examples are coming soon.
 
 First, we have to [install Xcode](https://itunes.apple.com/us/app/xcode/id497799835?ls=1&amp;mt=12) and then set up Xcode build tools. If you already have the build tools installed and they are up to date, you can skip this step.
+
 ```
 xcode-select --install
 ```

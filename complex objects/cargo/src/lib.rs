@@ -39,6 +39,7 @@ pub mod android {
     pub unsafe extern fn Java_com_mozilla_greetings_RustGreetings_greeting(env: JNIEnv, _: JClass, java_pattern: JString) -> jstring {
         let world = rust_greeting(env.get_string(java_pattern).expect("invalid pattern string").as_ptr());
         let output = env.new_string(CStr::from_ptr(world).to_str().unwrap()).expect("Couldn't create java string!");
+        rust_greeting_free(world);
 
         output.into_inner()
     }
