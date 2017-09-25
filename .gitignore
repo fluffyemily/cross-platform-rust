@@ -28,6 +28,6 @@ xcuserdata
 
 ## Rust
 NDK/
-basic/cargo/target/*/release/.fingerprint/
-basic/cargo/target/*/release/deps/
+*/cargo/target/*/release/.fingerprint/
+*/cargo/target/*/release/deps/
 
