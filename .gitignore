@@ -26,3 +26,8 @@ xcuserdata
 *.hmap
 *.ipa
 
+## Rust
+NDK/
+basic/cargo/target/*/release/.fingerprint/
+basic/cargo/target/*/release/deps/
+
