@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7B2BA8971F963D1E0093D191 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2BA8961F963D1E0093D191 /* Store.swift */; };
 		7B2BA8C51F979D8D0093D191 /* libgreetings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B9F01291F794F49000407E5 /* libgreetings.a */; };
+		7B2BA8C71F97B24E0093D191 /* ToDoListItemsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */; };
 		7B9F01101F794DB2000407E5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F010F1F794DB2000407E5 /* AppDelegate.swift */; };
 		7B9F01121F794DB2000407E5 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F01111F794DB2000407E5 /* LoginViewController.swift */; };
 		7B9F01151F794DB2000407E5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7B9F01131F794DB2000407E5 /* Main.storyboard */; };
@@ -31,6 +32,7 @@
 		7B2BA8981F963D3D0093D191 /* items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = items.h; path = ../../../../cargo/src/items.h; sourceTree = "<group>"; };
 		7B2BA8991F963D530093D191 /* categories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = categories.h; path = ../../../../cargo/src/categories.h; sourceTree = "<group>"; };
 		7B2BA89A1F963D660093D191 /* logins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = logins.h; path = ../../../../cargo/src/logins.h; sourceTree = "<group>"; };
+		7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListItemsTableViewController.swift; sourceTree = "<group>"; };
 		7B9F010C1F794DB2000407E5 /* ComplexRust.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComplexRust.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B9F010F1F794DB2000407E5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7B9F01111F794DB2000407E5 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
@@ -67,6 +69,7 @@
 		7B2BA8941F963C5C0093D191 /* Store */ = {
 			isa = PBXGroup;
 			children = (
+				7BB220531F8FA72500ACD7AF /* RustObject.swift */,
 				7BB2204B1F8F975F00ACD7AF /* Items */,
 				7B9F013C1F827D5D000407E5 /* Categories */,
 				7B9F012B1F795075000407E5 /* Logins */,
@@ -107,7 +110,7 @@
 				7B9F01301F7D13A5000407E5 /* NewLoginViewController.swift */,
 				7B9F01341F7D1634000407E5 /* NSLayoutConstraint+Utils.swift */,
 				7B9F013A1F827A23000407E5 /* ToDoListCategoryViewController.swift */,
-				7BB220531F8FA72500ACD7AF /* RustObject.swift */,
+				7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */,
 			);
 			path = ComplexRust;
 			sourceTree = "<group>";
@@ -229,6 +232,7 @@
 				7BB2204D1F8F976C00ACD7AF /* Item.swift in Sources */,
 				7B2BA8971F963D1E0093D191 /* Store.swift in Sources */,
 				7B9F01121F794DB2000407E5 /* LoginViewController.swift in Sources */,
+				7B2BA8C71F97B24E0093D191 /* ToDoListItemsTableViewController.swift in Sources */,
 				7B9F013B1F827A23000407E5 /* ToDoListCategoryViewController.swift in Sources */,
 				7B9F01101F794DB2000407E5 /* AppDelegate.swift in Sources */,
 				7B9F013E1F827D7B000407E5 /* Category.swift in Sources */,

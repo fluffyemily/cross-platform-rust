@@ -14,8 +14,9 @@ class ToDoListCategoryViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Toodle"
         categories = Categories.allCategories()
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ListCell")
+         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newCategory))
     }
 
     override func didReceiveMemoryWarning() {
@@ -32,6 +33,20 @@ class ToDoListCategoryViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return tableView.dequeueReusableCell(withIdentifier: "ListCell")!
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "ListCell")
+        let category = self.categories[indexPath.row]
+        cell.textLabel?.text = category.name
+        cell.detailTextLabel?.text = "\(category.items.count) items"
+        return cell
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let itemsVC = ToDoListItemsTableViewController()
+        itemsVC.category = self.categories[indexPath.row]
+        self.navigationController?.pushViewController(itemsVC, animated: true)
+    }
+
+    @objc fileprivate func newCategory() {
+        print("Adding a new category")
     }
 }
