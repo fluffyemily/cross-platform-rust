@@ -10,9 +10,11 @@ import UIKit
 
 class ToDoListCategoryViewController: UITableViewController {
 
+    var categories: [Category] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        categories = Categories.allCategories()
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ListCell")
     }
 
@@ -26,7 +28,7 @@ class ToDoListCategoryViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1
+        return categories.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

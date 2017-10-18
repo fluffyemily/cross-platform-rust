@@ -3,7 +3,7 @@ use std::sync::{Arc};
 
 use rusqlite::Connection;
 use rusqlite::Error;
-use time::now_utc;
+use time::now;
 use uuid::Uuid;
 
 use logins::Login;
@@ -61,12 +61,11 @@ impl Store {
         match login_iter.next() {
             Some(result) => {
                 match result {
-                    Ok(login) => {
-                        let mut l = login;
-                        if l.password != password {
-                            l.is_valid = 2;
+                    Ok(mut login) => {
+                        if login.password != password {
+                            login.is_valid = 2;
                         }
-                        Some(l)
+                        Some(login)
                     },
                     Err(err) => {
                         None
@@ -80,8 +79,15 @@ impl Store {
     pub fn create_login(&self, username: String, password: String) -> Option<Login> {
         let sql = r#"INSERT INTO logins (username, password, guid, time_last_used, times_used) VALUES (?1, ?2, ?3, ?4, ?5)"#;
         let time_last_used:Option<isize> = None;
-        let result = self.conn.execute(sql, &[&username, &password, &Uuid::new_v4().simple().to_string(), &time_last_used, &0]).unwrap();
+        self.conn.execute(sql, &[&username, &password, &Uuid::new_v4().simple().to_string(), &time_last_used, &0]).unwrap();
         self.fetch_login(username, password)
+    }
+
+    pub fn update_login_as_used(&self, login: &mut Login) {
+        let sql = r#"UPDATE logins SET time_last_used=?1, times_used=?2 WHERE id=?3"#;
+        login.times_used = login.times_used+1;
+        login.time_last_used = Some(now().to_timespec());
+        self.conn.execute(sql, &[&login.time_last_used, &login.times_used, &login.id]).unwrap();
     }
 }
 
@@ -104,18 +110,6 @@ pub unsafe extern "C" fn create_login(store: *const Store, username: *const c_ch
     let uname = c_char_to_string(username);
     let pword = c_char_to_string(password);
     let store = &*store;
-    // let now = now_utc().to_timespec().sec as isize;
-    // let login = Box::new(Login{
-    //         id: 0,
-    //         username: uname,
-    //         password: pword,
-    //         guid: Uuid::new_v4().simple().to_string(),
-    //         time_created: now.clone(),
-    //         time_last_used: None,
-    //         time_password_changed: now,
-    //         times_used: 0,
-    //         is_valid: 1
-    //     });
     let login = store.create_login(uname, pword).unwrap();
     Box::into_raw(Box::new(login))
 }
@@ -126,7 +120,10 @@ pub unsafe extern "C" fn validate_login(store: *const Store, username: *const c_
     let pword = c_char_to_string(password);
     let store = &*store;
     match store.fetch_login(uname, pword) {
-        Some(login) => login.is_valid as c_int,
+        Some(mut login) => {
+            store.update_login_as_used(&mut login);
+            login.is_valid as c_int
+        },
         None => 2 as c_int
     }
 }
