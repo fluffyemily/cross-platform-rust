@@ -12,6 +12,8 @@ protocol LoginViewControllerDelegate {
     func accountCreationSuccess(withUsername username: String, andPassword password: String)
 }
 
+private let LoggedInKey = "LoggedIn"
+
 class LoginViewController: UIViewController {
 
     lazy var newLoginVC: NewLoginViewController = {
@@ -98,6 +100,10 @@ class LoginViewController: UIViewController {
                         messageLabel.widthAnchor.constraint(equalTo: view.widthAnchor)]
 
         NSLayoutConstraint.activate(constraints, translatesAutoresizingMaskIntoConstraints: false)
+
+        if UserDefaults.standard.bool(forKey: LoggedInKey) {
+            self.openToDoList()
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -117,7 +123,9 @@ class LoginViewController: UIViewController {
     fileprivate func signIn(withUsername username: String, andPassword password: String) {
         switch self.dbStore.validateLogin(withUsername: username, andPassword: password) {
         case .valid:
-            self.navigationController?.pushViewController(ToDoListCategoryViewController(), animated: true)
+            // remember successful sign in so we don't have to do it every time
+            UserDefaults.standard.set(true, forKey: LoggedInKey)
+            self.openToDoList()
         case .incorrectPassword:
             self.messageLabel.text = "Incorrect password for username"
         case .unknownUsername:
@@ -131,6 +139,10 @@ class LoginViewController: UIViewController {
         self.newLoginVC.usernameTextField.text = self.usernameTextField.text
         self.newLoginVC.passwordTextField.text = self.passwordTextField.text
         self.present(self.newLoginVC, animated: true, completion: nil)
+    }
+
+    fileprivate func openToDoList() {
+        self.navigationController?.pushViewController(ToDoListCategoryViewController(), animated: true)
     }
 }
 
