@@ -15,6 +15,10 @@ class Category: RustObject {
         self.raw = raw
     }
 
+    init(name: String) {
+        self.raw = category_new(name)
+    }
+
     deinit {
         category_destroy(raw)
     }
