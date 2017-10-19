@@ -142,7 +142,9 @@ class LoginViewController: UIViewController {
     }
 
     fileprivate func openToDoList() {
-        self.navigationController?.pushViewController(ToDoListCategoryViewController(), animated: true)
+        let categoryVC = ToDoListCategoryViewController()
+        categoryVC.dbStore = self.dbStore
+        self.navigationController?.pushViewController(categoryVC, animated: true)
     }
 }
 

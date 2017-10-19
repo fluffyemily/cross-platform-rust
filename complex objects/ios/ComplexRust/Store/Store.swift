@@ -29,4 +29,17 @@ class Store: RustObject {
     func createLogin(withUsername username: String, andPassword password: String) -> Login {
         return Login(raw: create_login(raw, username, password)!)
     }
+
+    func allCategories() -> [Category] {
+        let categories = get_all_categories(raw)
+        var allCategories: [Category] = []
+        for val in UnsafeBufferPointer(start: categories, count: category_list_count(categories)) {
+            allCategories.append(Category(raw: val!))
+        }
+        return allCategories
+    }
+
+    func createCategory(withName name: String) -> Category {
+        return Category(raw: create_category(self.raw, name))
+    }
 }

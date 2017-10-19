@@ -100,6 +100,7 @@ pub unsafe extern "C" fn login_get_times_used(login: *const Login) -> c_int {
 
 #[no_mangle]
 pub unsafe extern "C" fn login_is_valid(login: *const Login) -> c_int {
-    1 as c_int
+    let login = &*login;
+    login.is_valid as c_int
 }
 

@@ -11,11 +11,28 @@ import UIKit
 class ToDoListCategoryViewController: UITableViewController {
 
     var categories: [Category] = []
+    var dbStore: Store!
+
+    lazy var newCategoryAlertController: UIAlertController = {
+        let alert = UIAlertController(title: "New Category", message: "Enter category name", preferredStyle: .alert)
+        let createAction = UIAlertAction(title: "Create", style: .default, handler: { (action) in
+            guard let categoryName = alert.textFields?[0].text else { return }
+            self.createCategory(categoryName: categoryName)
+        })
+        alert.addAction(createAction)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action) in
+        }))
+        alert.addTextField { (textField) in
+            textField.autocapitalizationType = .words
+            textField.delegate = self as? UITextFieldDelegate
+        }
+        return alert
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Toodle"
-        categories = Categories.allCategories()
+        categories = self.dbStore.allCategories()
          self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newCategory))
     }
 
@@ -47,6 +64,24 @@ class ToDoListCategoryViewController: UITableViewController {
     }
 
     @objc fileprivate func newCategory() {
-        print("Adding a new category")
+        self.present(newCategoryAlertController, animated: true)
+    }
+
+    fileprivate func createCategory(categoryName: String) {
+        let category = self.dbStore.createCategory(withName: categoryName)
+        self.categories.append(category)
+        self.tableView.reloadData()
+    }
+}
+
+extension ToDoListCategoryViewController: UITextViewDelegate {
+
+    func textViewDidChange(_ textView: UITextView) {
+        guard let text = textView.text,
+            !text.isEmpty else {
+                self.newCategoryAlertController.actions[0].isEnabled = false
+                return
+        }
+        self.newCategoryAlertController.actions[0].isEnabled = true
     }
 }

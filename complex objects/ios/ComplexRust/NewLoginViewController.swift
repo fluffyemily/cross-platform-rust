@@ -11,7 +11,7 @@ import UIKit
 class NewLoginViewController: UIViewController {
 
     var delegate: LoginViewControllerDelegate?
-    var dbStore: Store?
+    var dbStore: Store!
 
     lazy var newAccountLabel: UILabel = {
         let label = UILabel()
