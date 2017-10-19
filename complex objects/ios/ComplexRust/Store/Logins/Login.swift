@@ -22,6 +22,10 @@ class Login: RustObject {
         self.raw = raw
     }
 
+    init?(username: String, password: String) {
+        self.raw = login_new(username, password)
+    }
+
     deinit {
         login_destroy(raw)
     }
@@ -66,5 +70,9 @@ class Login: RustObject {
 
     var isValid: LoginStatus {
         return LoginStatus(rawValue: login_is_valid(raw)) ?? .invalid
+    }
+
+    static func validate(username: String, password: String) -> LoginStatus {
+        return LoginStatus(rawValue: validate_login(username, password)) ?? .invalid
     }
 }

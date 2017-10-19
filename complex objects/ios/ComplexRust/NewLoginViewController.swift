@@ -11,7 +11,6 @@ import UIKit
 class NewLoginViewController: UIViewController {
 
     var delegate: LoginViewControllerDelegate?
-    var dbStore: Store!
 
     lazy var newAccountLabel: UILabel = {
         let label = UILabel()
@@ -120,7 +119,7 @@ class NewLoginViewController: UIViewController {
         guard password == confirmedPassword else {
             return print("Password's do not match")
         }
-        guard let _ = self.dbStore?.createLogin(withUsername: username, andPassword: password) else {
+        guard let _ = Login(username: username, password: password) else {
             return print("failed to create login")
         }
         self.delegate?.accountCreationSuccess(withUsername: username, andPassword: password)

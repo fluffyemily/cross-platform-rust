@@ -19,12 +19,7 @@ class LoginViewController: UIViewController {
     lazy var newLoginVC: NewLoginViewController = {
         let newVC = NewLoginViewController()
         newVC.delegate = self
-        newVC.dbStore = self.dbStore
         return newVC
-    }()
-
-    lazy var dbStore: Store = {
-        return Store()
     }()
 
     var messageLabel: UILabel = {
@@ -121,7 +116,7 @@ class LoginViewController: UIViewController {
     }
 
     fileprivate func signIn(withUsername username: String, andPassword password: String) {
-        switch self.dbStore.validateLogin(withUsername: username, andPassword: password) {
+        switch Login.validate(username: username, password: password) {
         case .valid:
             // remember successful sign in so we don't have to do it every time
             UserDefaults.standard.set(true, forKey: LoggedInKey)
@@ -143,7 +138,6 @@ class LoginViewController: UIViewController {
 
     fileprivate func openToDoList() {
         let categoryVC = ToDoListCategoryViewController()
-        categoryVC.dbStore = self.dbStore
         self.navigationController?.pushViewController(categoryVC, animated: true)
     }
 }

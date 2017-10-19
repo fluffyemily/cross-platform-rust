@@ -6,6 +6,8 @@
 
 struct login;
 
+struct login* login_new(const char* username, const char* password);
+const size_t validate_login(const char* username, const char* password);
 void login_destroy(struct login* data);
 
 // Accessors for Login properties

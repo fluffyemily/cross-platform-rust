@@ -11,7 +11,6 @@ import UIKit
 class ToDoListCategoryViewController: UITableViewController {
 
     var categories: [Category] = []
-    var dbStore: Store!
 
     lazy var newCategoryAlertController: UIAlertController = {
         let alert = UIAlertController(title: "New Category", message: "Enter category name", preferredStyle: .alert)
@@ -32,7 +31,7 @@ class ToDoListCategoryViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Toodle"
-        categories = self.dbStore.allCategories()
+        categories = Category.fetchAll()
          self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newCategory))
     }
 
@@ -68,7 +67,7 @@ class ToDoListCategoryViewController: UITableViewController {
     }
 
     fileprivate func createCategory(categoryName: String) {
-        let category = self.dbStore.createCategory(withName: categoryName)
+        let category = Category(name: categoryName)
         self.categories.append(category)
         self.tableView.reloadData()
     }

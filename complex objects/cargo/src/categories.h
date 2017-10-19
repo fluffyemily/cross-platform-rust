@@ -6,9 +6,10 @@
 struct category;
 struct item;
 
+
+struct category** get_all_categories();
 const size_t category_list_count(const struct category** list);
 const void category_list_destroy(const struct category** list);
-const void add_category(const struct category** list, const struct category* category);
 
 struct category* category_new(const char* name);
 const void category_destroy(const struct category* category);

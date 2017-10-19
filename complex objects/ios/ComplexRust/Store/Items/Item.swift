@@ -15,6 +15,10 @@ class Item: RustObject {
         self.raw = raw
     }
 
+    init() {
+        self.raw = item_new();
+    }
+
     deinit {
         item_destroy(raw)
     }
