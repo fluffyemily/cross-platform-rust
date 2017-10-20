@@ -171,14 +171,14 @@ impl Drop for Category {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_all_categories(manager: *const CategoryManager) -> *mut Vec<Category> {
+pub unsafe extern "C" fn get_all_categories(manager: *const Arc<CategoryManager>) -> *mut Vec<Category> {
     let manager = &*manager;
     let category_list = Box::new(manager.fetch_categories());
     Box::into_raw(category_list)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_category(manager: *const CategoryManager, name: *const c_char) -> *mut Category {
+pub unsafe extern "C" fn create_category(manager: *const Arc<CategoryManager>, name: *const c_char) -> *mut Category {
     let manager = &*manager;
     let name = c_char_to_string(name);
     let category = Box::new(manager.create_category(name).unwrap());
@@ -186,7 +186,7 @@ pub unsafe extern "C" fn create_category(manager: *const CategoryManager, name: 
 }
 
 #[no_mangle]
-pub extern "C" fn category_new(manager: *const CategoryManager, name: *const c_char) -> *mut Category {
+pub extern "C" fn category_new(manager: *const Arc<CategoryManager>, name: *const c_char) -> *mut Category {
     let category = Category{
         id: -1,
         name: c_char_to_string(name),

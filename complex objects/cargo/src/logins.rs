@@ -129,7 +129,7 @@ impl Login {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_login(manager: *const LoginManager, username: *const c_char, password: *const c_char) -> *mut Login {
+pub unsafe extern "C" fn create_login(manager: *const Arc<LoginManager>, username: *const c_char, password: *const c_char) -> *mut Login {
     let uname = c_char_to_string(username);
     let pword = c_char_to_string(password);
     let manager = &*manager;
@@ -138,7 +138,7 @@ pub unsafe extern "C" fn create_login(manager: *const LoginManager, username: *c
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn validate_login(manager: *const LoginManager, username: *const c_char, password: *const c_char) -> c_int {
+pub unsafe extern "C" fn validate_login(manager: *const Arc<LoginManager>, username: *const c_char, password: *const c_char) -> c_int {
     let uname = c_char_to_string(username);
     let pword = c_char_to_string(password);
     let manager = &*manager;
