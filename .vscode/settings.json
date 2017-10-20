@@ -3,6 +3,10 @@
         "array": "cpp",
         "iterator": "cpp",
         "string": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "atomic": "cpp",
+        "list": "cpp",
+        "__locale": "cpp",
+        "system_error": "cpp"
     }
 }
