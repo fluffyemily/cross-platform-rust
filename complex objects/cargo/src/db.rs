@@ -1,35 +1,19 @@
 use std::os::raw::{c_char, c_int};
-use std::sync::{Arc};
+use std::sync::{Arc, Mutex};
 
 use rusqlite::Connection;
 use time::now;
 use uuid::Uuid;
-use r2d2_sqlite::SqliteConnectionManager;
-use r2d2::{Pool, Config, PooledConnection};
 
 use logins::Login;
 use categories::Category;
 use items::Item;
 use utils::{c_char_to_string};
 
-lazy_static! {
-    pub static ref DB_POOL: Pool<SqliteConnectionManager> = setup_db();
-}
-
-fn setup_db() -> Pool<SqliteConnectionManager> {
-    let config = Config::default();
-    let manager = SqliteConnectionManager::file("test.db");
-    Pool::new(config, manager).unwrap()
-}
-
-fn connection() -> PooledConnection<SqliteConnectionManager> {
-    let pool = DB_POOL.clone();
-    pool.get().unwrap()
-}
-
 #[derive(Debug)]
 pub struct Store {
-    pub conn: Arc<Connection>
+    pub conn: Arc<Mutex<Connection>>,
+    uri: String
 }
 
 impl Drop for Store {
@@ -40,7 +24,10 @@ impl Drop for Store {
 
 impl Store {
     pub fn new(uri: String) -> Self {
-        Store { conn: Arc::new(Connection::open(uri).unwrap()) }
+        Store {
+            conn: Arc::new(Mutex::new(Connection::open(uri.clone()).unwrap())),
+            uri: uri
+        }
     }
 
     pub fn create_logins_table(&self) {
@@ -54,7 +41,8 @@ impl Store {
                 time_password_changed DATETIME DEFAULT CURRENT_TIMESTAMP,
                 times_used INTEGER DEFAULT 0
             )"#;
-        self.conn.execute(sql, &[]).unwrap();
+        let db = self.conn.lock().unwrap();
+        db.execute(sql, &[]).unwrap();
     }
 
     pub fn fetch_login(&self, username: String, password: String) -> Option<Login> {
@@ -62,7 +50,8 @@ impl Store {
                      FROM logins
                      WHERE username=?
                      LIMIT 1"#;
-        let mut stmt = self.conn.prepare(sql).unwrap();
+        let db = self.conn.lock().unwrap();
+        let mut stmt = db.prepare(sql).unwrap();
         let mut login_iter = stmt.query_map(&[&username], |row| {
             Login {
                 id: row.get(0),
@@ -97,7 +86,8 @@ impl Store {
     pub fn create_login(&self, username: String, password: String) -> Option<Login> {
         let sql = r#"INSERT INTO logins (username, password, guid, time_last_used, times_used) VALUES (?1, ?2, ?3, ?4, ?5)"#;
         let time_last_used:Option<isize> = None;
-        self.conn.execute(sql, &[&username, &password, &Uuid::new_v4().simple().to_string(), &time_last_used, &0]).unwrap();
+        let db = self.conn.lock().unwrap();
+        db.execute(sql, &[&username, &password, &Uuid::new_v4().simple().to_string(), &time_last_used, &0]).unwrap();
         self.fetch_login(username, password)
     }
 
@@ -105,7 +95,9 @@ impl Store {
         let sql = r#"UPDATE logins SET time_last_used=?1, times_used=?2 WHERE id=?3"#;
         login.times_used = login.times_used+1;
         login.time_last_used = Some(now().to_timespec());
-        self.conn.execute(sql, &[&login.time_last_used, &login.times_used, &login.id]).unwrap();
+
+        let db = self.conn.lock().unwrap();
+        db.execute(sql, &[&login.time_last_used, &login.times_used, &login.id]).unwrap();
     }
 
     pub fn create_categories_table(&self) {
@@ -113,7 +105,8 @@ impl Store {
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL
             )"#;
-        match self.conn.execute(sql, &[]).unwrap() {
+        let db = self.conn.lock().unwrap();
+        match db.execute(sql, &[]).unwrap() {
             1 => {
                 self.create_category("To Do".to_string());
             },
@@ -123,14 +116,16 @@ impl Store {
 
     pub fn create_category(&self, name: String) -> Option<Category> {
         let sql = r#"INSERT INTO categories (name) VALUES (?)"#;
-        self.conn.execute(sql, &[&name]).unwrap();
+        let db = self.conn.lock().unwrap();
+        db.execute(sql, &[&name]).unwrap();
         self.fetch_category(&name)
     }
 
     pub fn fetch_category(&self, name: &String) -> Option<Category> {
         let sql = r#"SELECT id, name FROM categories WHERE name=?"#;
 
-        let mut stmt = self.conn.prepare(sql).unwrap();
+        let db = self.conn.lock().unwrap();
+        let mut stmt = db.prepare(sql).unwrap();
         let mut category_iter = stmt.query_map(&[name], |row| {
             Category {
                 id: row.get(0),
@@ -156,7 +151,8 @@ impl Store {
     pub fn fetch_categories(&self) -> Vec<Category> {
         let sql = r#"SELECT id, name
                      FROM categories"#;
-        let mut stmt = self.conn.prepare(sql).unwrap();
+        let db = self.conn.lock().unwrap();
+        let mut stmt = db.prepare(sql).unwrap();
         let mut category_iter = stmt.query_map(&[], |row| {
             Category {
                 id: row.get(0),
@@ -192,14 +188,16 @@ impl Store {
                 is_complete TINYINT DEFAULT 0,
                 category REFERENCES categories(id)
             )"#;
-        self.conn.execute(sql, &[]).unwrap();
+        let db = self.conn.lock().unwrap();
+        db.execute(sql, &[]).unwrap();
     }
 
     pub fn fetch_items_for_category(&self, category: &Category) -> Vec<Item> {
         let sql = r#"SELECT id, description, created_at, due_date, is_complete
                      FROM items
                      WHERE category=?"#;
-        let mut stmt = self.conn.prepare(sql).unwrap();
+        let db = self.conn.lock().unwrap();
+        let mut stmt = db.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[&category.id], |row| {
             Item {
                 id: row.get(0),
