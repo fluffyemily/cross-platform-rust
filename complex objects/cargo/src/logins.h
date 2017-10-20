@@ -8,6 +8,9 @@ struct login;
 
 void login_destroy(struct login* data);
 
+struct login* create_login(const struct store* data, const char* username, const char* password);
+const size_t validate_login(const struct store* store, const char* username, const char* password);
+
 // Accessors for Login properties
 const size_t login_get_id(const struct login* data);
 const char* login_get_username(const struct login* data);
