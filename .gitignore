@@ -30,4 +30,5 @@ xcuserdata
 NDK/
 */cargo/target/*/release/.fingerprint/
 */cargo/target/*/release/deps/
+.vscode
 
