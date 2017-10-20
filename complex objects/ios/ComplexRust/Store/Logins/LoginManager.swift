@@ -1,9 +1,16 @@
-//
-//  LoginManager.swift
-//  ComplexRust
-//
-//  Created by Emily Toop on 20/10/2017.
-//  Copyright © 2017 Mozilla. All rights reserved.
-//
 
-import Foundation
+class LoginManager: RustObject {
+    let raw: OpaquePointer
+
+    required init(raw: OpaquePointer) {
+        self.raw = raw
+    }
+
+    func validateLogin(withUsername username: String, andPassword password: String) -> LoginStatus {
+        return LoginStatus(rawValue: validate_login(self.raw, username, password)) ?? .invalid
+    }
+
+    func createLogin(withUsername username: String, andPassword password: String) -> Login? {
+        return Login(raw: create_login(self.raw, username, password))
+    }
+}

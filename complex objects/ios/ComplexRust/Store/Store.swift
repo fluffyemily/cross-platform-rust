@@ -9,6 +9,14 @@
 import Foundation
 
 class Store: RustObject {
+
+    class var sharedInstance: Store {
+        struct Static {
+            static let instance: Store = Store()
+        }
+        return Static.instance
+    }
+
     var raw: OpaquePointer
 
     required init(raw: OpaquePointer) {
@@ -22,24 +30,14 @@ class Store: RustObject {
         self.init(raw: new_store(storeURI))
     }
 
-    func validateLogin(withUsername username: String, andPassword password: String) -> LoginStatus {
-        return LoginStatus(rawValue: validate_login(raw, username, password)) ?? .invalid
+    var logins: LoginManager {
+        return LoginManager(raw: store_logins(self.raw));
     }
 
-    func createLogin(withUsername username: String, andPassword password: String) -> Login {
-        return Login(raw: create_login(raw, username, password)!)
+    var categories: CategoryManager {
+        return CategoryManager(raw: store_categories(self.raw));
     }
+}
 
-    func allCategories() -> [Category] {
-        let categories = get_all_categories(raw)
-        var allCategories: [Category] = []
-        for val in UnsafeBufferPointer(start: categories, count: category_list_count(categories)) {
-            allCategories.append(Category(raw: val!))
-        }
-        return allCategories
-    }
-
-    func createCategory(withName name: String) -> Category {
-        return Category(raw: create_category(self.raw, name))
-    }
+class Singleton {
 }

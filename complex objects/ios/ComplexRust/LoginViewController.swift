@@ -19,12 +19,11 @@ class LoginViewController: UIViewController {
     lazy var newLoginVC: NewLoginViewController = {
         let newVC = NewLoginViewController()
         newVC.delegate = self
-        newVC.dbStore = self.dbStore
         return newVC
     }()
 
     lazy var dbStore: Store = {
-        return Store()
+        return Store.sharedInstance
     }()
 
     var messageLabel: UILabel = {
@@ -121,7 +120,7 @@ class LoginViewController: UIViewController {
     }
 
     fileprivate func signIn(withUsername username: String, andPassword password: String) {
-        switch self.dbStore.validateLogin(withUsername: username, andPassword: password) {
+        switch self.dbStore.logins.validateLogin(withUsername: username, andPassword: password) {
         case .valid:
             // remember successful sign in so we don't have to do it every time
             UserDefaults.standard.set(true, forKey: LoggedInKey)
