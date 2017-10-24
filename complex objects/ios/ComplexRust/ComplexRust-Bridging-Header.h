@@ -6,6 +6,5 @@
 #define ComplexRust_Bridging_Header_h
 
 #import "db.h"
-#import "categories.h"
 
 #endif /* ComplexRust_Bridging_Header_h */

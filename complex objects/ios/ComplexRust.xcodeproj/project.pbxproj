@@ -9,9 +9,10 @@
 /* Begin PBXBuildFile section */
 		7B2BA8971F963D1E0093D191 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2BA8961F963D1E0093D191 /* Store.swift */; };
 		7B2BA8C71F97B24E0093D191 /* ToDoListItemsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */; };
-		7B47BBD41F9A3E5500FCA5AA /* libgreetings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B9F01291F794F49000407E5 /* libgreetings.a */; };
 		7B47BBD61F9A3E7A00FCA5AA /* CategoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47BBD51F9A3E7A00FCA5AA /* CategoryManager.swift */; };
 		7B47BBD81F9A3EDE00FCA5AA /* LoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47BBD71F9A3EDE00FCA5AA /* LoginManager.swift */; };
+		7B47BBDE1F9A518D00FCA5AA /* ItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47BBDD1F9A518D00FCA5AA /* ItemViewController.swift */; };
+		7B9CC0121F9F752C00EB5A8D /* libgreetings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B9F01291F794F49000407E5 /* libgreetings.a */; };
 		7B9F01101F794DB2000407E5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F010F1F794DB2000407E5 /* AppDelegate.swift */; };
 		7B9F01121F794DB2000407E5 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F01111F794DB2000407E5 /* LoginViewController.swift */; };
 		7B9F01151F794DB2000407E5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7B9F01131F794DB2000407E5 /* Main.storyboard */; };
@@ -36,6 +37,7 @@
 		7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListItemsTableViewController.swift; sourceTree = "<group>"; };
 		7B47BBD51F9A3E7A00FCA5AA /* CategoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryManager.swift; sourceTree = "<group>"; };
 		7B47BBD71F9A3EDE00FCA5AA /* LoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginManager.swift; sourceTree = "<group>"; };
+		7B47BBDD1F9A518D00FCA5AA /* ItemViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemViewController.swift; sourceTree = "<group>"; };
 		7B9F010C1F794DB2000407E5 /* ComplexRust.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ComplexRust.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B9F010F1F794DB2000407E5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7B9F01111F794DB2000407E5 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
@@ -61,7 +63,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B9F01281F794F3B000407E5 /* libresolv.tbd in Frameworks */,
-				7B47BBD41F9A3E5500FCA5AA /* libgreetings.a in Frameworks */,
+				7B9CC0121F9F752C00EB5A8D /* libgreetings.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +81,19 @@
 				7B2BA8961F963D1E0093D191 /* Store.swift */,
 			);
 			path = Store;
+			sourceTree = "<group>";
+		};
+		7B47BBDF1F9A51A100FCA5AA /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				7B9F01131F794DB2000407E5 /* Main.storyboard */,
+				7B9F01111F794DB2000407E5 /* LoginViewController.swift */,
+				7B9F01301F7D13A5000407E5 /* NewLoginViewController.swift */,
+				7B9F013A1F827A23000407E5 /* ToDoListCategoryViewController.swift */,
+				7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */,
+				7B47BBDD1F9A518D00FCA5AA /* ItemViewController.swift */,
+			);
+			path = Controllers;
 			sourceTree = "<group>";
 		};
 		7B9F01031F794DB1000407E5 = {
@@ -105,14 +120,10 @@
 				7B9F01241F794ED6000407E5 /* ComplexRust-Bridging-Header.h */,
 				7B9F010F1F794DB2000407E5 /* AppDelegate.swift */,
 				7B9F011B1F794DB2000407E5 /* Info.plist */,
-				7B9F01131F794DB2000407E5 /* Main.storyboard */,
+				7B47BBDF1F9A51A100FCA5AA /* Controllers */,
 				7B9F01161F794DB2000407E5 /* Assets.xcassets */,
 				7B9F01181F794DB2000407E5 /* LaunchScreen.storyboard */,
-				7B9F01111F794DB2000407E5 /* LoginViewController.swift */,
-				7B9F01301F7D13A5000407E5 /* NewLoginViewController.swift */,
 				7B9F01341F7D1634000407E5 /* NSLayoutConstraint+Utils.swift */,
-				7B9F013A1F827A23000407E5 /* ToDoListCategoryViewController.swift */,
-				7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */,
 			);
 			path = ComplexRust;
 			sourceTree = "<group>";
@@ -233,6 +244,7 @@
 				7B9F01311F7D13A5000407E5 /* NewLoginViewController.swift in Sources */,
 				7BB2204D1F8F976C00ACD7AF /* Item.swift in Sources */,
 				7B47BBD81F9A3EDE00FCA5AA /* LoginManager.swift in Sources */,
+				7B47BBDE1F9A518D00FCA5AA /* ItemViewController.swift in Sources */,
 				7B2BA8971F963D1E0093D191 /* Store.swift in Sources */,
 				7B9F01121F794DB2000407E5 /* LoginViewController.swift in Sources */,
 				7B2BA8C71F97B24E0093D191 /* ToDoListItemsTableViewController.swift in Sources */,
