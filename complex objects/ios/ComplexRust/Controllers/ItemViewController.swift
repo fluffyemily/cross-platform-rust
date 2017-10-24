@@ -6,6 +6,8 @@ import UIKit
 
 class ItemViewController: UIViewController {
 
+    var delegate: ToDoListItemsViewControllerDelegate?
+
     lazy var itemDescriptionLabel: UILabel = {
         let label = UILabel()
         label.text = "Description:"
@@ -227,6 +229,7 @@ class ItemViewController: UIViewController {
         } else {
             try? Store.sharedInstance.categories.update(item: currentItem)
         }
+        self.delegate?.itemSaveSuccess(item: currentItem)
     }
 
 }

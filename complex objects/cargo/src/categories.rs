@@ -346,5 +346,5 @@ pub unsafe extern "C" fn add_category(category_list: *mut Vec<Category>, categor
 pub unsafe extern "C" fn category_add_item(category: *mut Category, item: *const Item) {
     let mut category = &mut*category;
     let item = &*item;
-    category.items.push((*item).clone())
+    category.items.push((*item).clone());
 }

@@ -24,7 +24,25 @@ class Category: RustObject {
         return String(cString: category_get_name(raw))
     }
 
+    fileprivate var _items: [Item] = []
+
     var items: [Item] {
+        if self.refreshItems {
+            self._items = self.fetchItems()
+            self.refreshItems = false
+        }
+
+        return self._items
+    }
+
+    fileprivate var refreshItems = true
+
+    func add_item(item: Item) {
+        category_add_item(self.raw, item.raw)
+        self.refreshItems = true
+    }
+
+    fileprivate func fetchItems() -> [Item] {
         print("items for category: \(self.name)")
         let items = category_get_items(self.raw)
         var items_list: [Item] = []
@@ -33,9 +51,5 @@ class Category: RustObject {
         }
         print("items for category: \(self.name)")
         return items_list
-    }
-
-    func add_item(item: Item) {
-        category_add_item(self.raw, item.raw)
     }
 }

@@ -57,7 +57,9 @@ class ToDoListItemsTableViewController: UITableViewController {
     }
 
     @objc fileprivate func newItem() {
-        let navController = UINavigationController(rootViewController: ItemViewController(category: self.category))
+        let itemVC = ItemViewController(category: self.category)
+        itemVC.delegate = self
+        let navController = UINavigationController(rootViewController: itemVC)
         self.present(navController, animated: true, completion: nil)
     }
 
