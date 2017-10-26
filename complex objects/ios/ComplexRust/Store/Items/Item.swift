@@ -36,12 +36,15 @@ class Item: RustObject {
         return Date(timeIntervalSinceReferenceDate: Double(item_get_created_at(raw)))
     }
 
-    var dueDate: Date {
+    var dueDate: Date? {
         get {
-            return Date(timeIntervalSinceReferenceDate: Double(item_get_due_date(raw)))
+            let date = item_get_due_date(raw)
+            return Date(timeIntervalSince1970: Double(date))
         }
         set {
-            item_set_due_date(raw, Int(newValue.timeIntervalSince1970))
+            if let d = newValue {
+                item_set_due_date(raw, Int(d.timeIntervalSince1970))
+            }
         }
     }
 
@@ -54,9 +57,12 @@ class Item: RustObject {
         }
     }
 
-    func dueDateAsString() -> String {
+    func dueDateAsString() -> String? {
+        guard let dueDate = self.dueDate else {
+            return nil
+        }
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        return dateFormatter.string(from:self.dueDate)
+        return dateFormatter.string(from: dueDate)
     }
 }

@@ -85,8 +85,10 @@ class ItemViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
 
         self.descriptionField.text = item.description
-        self.dueDateButton.setTitle(self.dateAsString(date: item.dueDate), for: .normal)
-        self.dueDatePicker.date = item.dueDate
+        if let dueDate = item.dueDate {
+            self.dueDateButton.setTitle(self.dateAsString(date: dueDate), for: .normal)
+            self.dueDatePicker.date = dueDate
+        }
         self.markComplete(isComplete: !item.isComplete)
     }
 
@@ -200,10 +202,8 @@ class ItemViewController: UIViewController {
     @objc func done() {
         self.save()
         if let _ = self.item {
-            print("Edit existing item")
             self.navigationController?.popViewController(animated: true)
         } else {
-            print("Create new item")
             self.close()
         }
     }
@@ -220,14 +220,15 @@ class ItemViewController: UIViewController {
         let currentItem = self.item ?? Item()
 
         currentItem.description = description
-        currentItem.dueDate = self.dueDatePicker.date
+        if self.dueDateButton.titleLabel?.text != "Set" {
+            currentItem.dueDate = self.dueDatePicker.date
+        }
         currentItem.isComplete = (self.statusValueLabel.text ?? "") != "Complete"
 
-        print("saving item \(currentItem)")
         if currentItem.id > -1 {
-            Store.sharedInstance.categories.add(item: currentItem, toCategory: category)
-        } else {
             try? Store.sharedInstance.categories.update(item: currentItem)
+        } else {
+            Store.sharedInstance.categories.add(item: currentItem, toCategory: category)
         }
         self.delegate?.itemSaveSuccess(item: currentItem)
     }

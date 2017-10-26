@@ -56,6 +56,13 @@ class ToDoListItemsTableViewController: UITableViewController {
         return cell
     }
 
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let item = self.category.items[indexPath.row]
+        let itemVC = ItemViewController(item: item, category: self.category)
+        itemVC.delegate = self
+        self.navigationController?.pushViewController(itemVC, animated: true)
+    }
+
     @objc fileprivate func newItem() {
         let itemVC = ItemViewController(category: self.category)
         itemVC.delegate = self

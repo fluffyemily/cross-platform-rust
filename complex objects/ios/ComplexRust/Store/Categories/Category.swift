@@ -20,7 +20,6 @@ class Category: RustObject {
     }
 
     var name: String {
-        print("Requesting name for category \(raw)")
         return String(cString: category_get_name(raw))
     }
 
@@ -43,13 +42,11 @@ class Category: RustObject {
     }
 
     fileprivate func fetchItems() -> [Item] {
-        print("items for category: \(self.name)")
         let items = category_get_items(self.raw)
         var items_list: [Item] = []
         for index in 0..<category_items_count(self.raw) {
             items_list.append(Item(raw: category_item_at(items, index)!))
         }
-        print("items for category: \(self.name)")
         return items_list
     }
 }

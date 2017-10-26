@@ -32,6 +32,7 @@ use utils::{
 };
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct Store {
     pub conn: Arc<Mutex<Connection>>,
     pub uri: String,

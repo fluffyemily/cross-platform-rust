@@ -29,6 +29,7 @@ use utils::{
 };
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct CategoryManager {
     conn: Arc<Mutex<Connection>>,
     uri: String
@@ -135,24 +136,12 @@ impl CategoryManager {
     }
 
     pub fn fetch_items_for_category(&self, category: &Category) -> Vec<Item> {
-        println!("fetch_items_for_category: {:?}", category);
         let sql = r#"SELECT id, description, created_at, due_date, is_complete
                      FROM items
                      WHERE category=?"#;
         let db = read_connection(&self.uri);
         let mut stmt = db.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[&category.id], |row| {
-            println!("fetch_items_for_category: found row");
-            let id: i64 = row.get(0);
-            println!("fetch_items_for_category: id {:?}", id);
-            let desc: String = row.get(1);
-            println!("fetch_items_for_category: description {:?}", desc);
-            let created: Timespec = row.get(2);
-            println!("fetch_items_for_category: created_at {:?}", created);
-            let due: Timespec = row.get(3);
-            println!("fetch_items_for_category: due_date {:?}", due);
-            let complete: i64 = row.get(4);
-            println!("fetch_items_for_category: is_complete {:?}", complete);
             Item {
                 id: row.get(0),
                 description: row.get(1),
@@ -181,28 +170,14 @@ impl CategoryManager {
     }
 
     pub fn create_item(&self, item: &Item, category_id: i64) -> Option<Item> {
-        println!("create_item {:?}", item);
         let sql = r#"INSERT INTO items (description, due_date, is_complete, category) VALUES (?, ?, ?, ?)"#;
         let db = self.conn.lock().unwrap();
         let mut stmt = db.prepare(sql).unwrap();
-        println!("create_item: inserting item");
         match stmt.insert(&[&item.description, &item.due_date, &item.is_complete, &category_id]) {
             Ok(row_id) => {
-                println!("create_item: fetching item with row id {:?}", row_id);
                 let fetch_sql = r#"SELECT id, description, created_at, due_date, is_complete FROM items WHERE rowid=?"#;
                 stmt = db.prepare(fetch_sql).unwrap();
                 let mut item_iter = stmt.query_map(&[&row_id], |row| {
-                    println!("create_item: found row");
-                    let id: i64 = row.get(0);
-                    println!("create_item: id {:?}", id);
-                    let desc: String = row.get(1);
-                    println!("create_item: description {:?}", desc);
-                    let created: Timespec = row.get(2);
-                    println!("create_item: created_at {:?}", created);
-                    let due: Option<Timespec> = row.get(3);
-                    println!("create_item: due_date {:?}", due);
-                    let complete: i64 = row.get(4);
-                    println!("create_item: is_complete {:?}", complete);
                     Item {
                         id: row.get(0),
                         description: row.get(1),
@@ -226,7 +201,6 @@ impl CategoryManager {
     }
 
     pub fn update_item(&self, item: &Item) {
-        println!("update_item {:?}", item);
         let sql = r#"UPDATE items SET description=?, due_date=?, is_complete=? WHERE id=?"#;
         let db = self.conn.lock().unwrap();
         let _ = db.execute(sql, &[&item.description, &item.due_date, &item.is_complete, &item.id]);
@@ -234,6 +208,7 @@ impl CategoryManager {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct Category {
     pub id: isize,
     pub name: String,
@@ -289,9 +264,7 @@ pub unsafe extern "C" fn category_get_id(category: *const Category) -> c_int {
 
 #[no_mangle]
 pub unsafe extern "C" fn category_get_name(category: *const Category) -> *mut c_char {
-    println!("category_get_name");
     let category = &*category;
-    println!("category name: {:?}", category.name);
     string_to_c_char(category.name.clone())
 }
 

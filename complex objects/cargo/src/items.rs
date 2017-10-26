@@ -24,6 +24,7 @@ use utils::{
 };
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct Item {
     pub id: isize,
     pub description: String,
@@ -84,8 +85,12 @@ pub unsafe extern "C" fn item_get_created_at(item: *const Item) -> c_int {
 pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> c_int {
     let item = &*item;
     match item.due_date {
-        Some(date) => date.sec as c_int,
-        None => *ptr::null()
+        Some(date) => {
+            date.sec as c_int
+        },
+        None => {
+            *ptr::null()
+        }
     }
 
 }
@@ -98,7 +103,6 @@ pub unsafe extern "C" fn item_set_due_date(item: *mut Item, due_date: *const siz
     } else {
         item.due_date = None;
     }
-
 }
 
 #[no_mangle]

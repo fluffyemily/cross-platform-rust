@@ -31,6 +31,7 @@ use utils::{
 };
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct LoginManager {
     pub conn: Arc<Mutex<Connection>>,
     uri: String
@@ -116,6 +117,7 @@ impl LoginManager {
 }
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct Login {
     pub id: isize,
     pub username: String,

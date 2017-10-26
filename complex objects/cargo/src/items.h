@@ -12,9 +12,9 @@ const char* item_get_description(const struct item* item);
 const void item_set_description(struct item* item, const char* description);
 const size_t item_get_created_at(const struct item* item);
 const size_t item_get_due_date(const struct item* item);
-const void item_set_due_date(struct item* item, size_t due_date);
+const void item_set_due_date(struct item* item, size_t description);
 const size_t item_get_is_complete(const struct item* item);
-const void item_set_is_complete(struct item* item, size_t is_complete);
+const void item_set_is_complete(struct item* item, size_t description);
 
 
 #endif /* items_h */
