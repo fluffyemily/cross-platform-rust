@@ -225,7 +225,7 @@ class ItemViewController: UIViewController {
         }
         currentItem.isComplete = (self.statusValueLabel.text ?? "") != "Complete"
 
-        if currentItem.id > -1 {
+        if let _ = currentItem.id {
             try? Store.sharedInstance.categories.update(item: currentItem)
         } else {
             Store.sharedInstance.categories.add(item: currentItem, toCategory: category)

@@ -19,8 +19,8 @@ class Item: RustObject {
         item_destroy(raw)
     }
 
-    var id: Int {
-        return item_get_id(raw)
+    var id: Int? {
+        return item_get_id(raw)?.pointee
     }
 
     var description: String {
@@ -38,12 +38,14 @@ class Item: RustObject {
 
     var dueDate: Date? {
         get {
-            let date = item_get_due_date(raw)
-            return Date(timeIntervalSince1970: Double(date))
+            guard let date = item_get_due_date(raw) else {
+                return nil
+            }
+            return Date(timeIntervalSince1970: Double(date.pointee))
         }
         set {
             if let d = newValue {
-                item_set_due_date(raw, Int(d.timeIntervalSince1970))
+                item_set_due_date(raw, Int64(d.timeIntervalSince1970))
             }
         }
     }

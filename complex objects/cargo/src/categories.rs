@@ -142,6 +142,7 @@ impl CategoryManager {
         let db = read_connection(&self.uri);
         let mut stmt = db.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[&category.id], |row| {
+            let complete: i64 = row.get(4);
             Item {
                 id: row.get(0),
                 description: row.get(1),
@@ -170,14 +171,15 @@ impl CategoryManager {
     }
 
     pub fn create_item(&self, item: &Item, category_id: i64) -> Option<Item> {
-        let sql = r#"INSERT INTO items (description, due_date, is_complete, category) VALUES (?, ?, ?, ?)"#;
+        let sql = r#"INSERT INTO items (description, created_at, due_date, is_complete, category) VALUES (?, ?, ?, ?, ?)"#;
         let db = self.conn.lock().unwrap();
         let mut stmt = db.prepare(sql).unwrap();
-        match stmt.insert(&[&item.description, &item.due_date, &item.is_complete, &category_id]) {
+        match stmt.insert(&[&item.description, &item.created_at, &item.due_date, &item.is_complete, &category_id]) {
             Ok(row_id) => {
                 let fetch_sql = r#"SELECT id, description, created_at, due_date, is_complete FROM items WHERE rowid=?"#;
                 stmt = db.prepare(fetch_sql).unwrap();
                 let mut item_iter = stmt.query_map(&[&row_id], |row| {
+                    let complete: i64 = row.get(4);
                     Item {
                         id: row.get(0),
                         description: row.get(1),
@@ -190,13 +192,21 @@ impl CategoryManager {
                     Some(result) => {
                         match result {
                             Ok(item) => Some(item),
-                            Err(_) => None
+                            Err(e) => {
+                                println!("Failed to fetch item {:?}", e);
+                                None
+                            }
                         }
                     },
-                    None => None
+                    None => {
+                        None
+                    }
                 }
             },
-            Err(_) => None
+            Err(e) => {
+                println!("Failed to create item {:?}", e);
+                None
+            }
         }
     }
 

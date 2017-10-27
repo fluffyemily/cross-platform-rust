@@ -26,7 +26,7 @@ use utils::{
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Item {
-    pub id: isize,
+    pub id: Option<isize>,
     pub description: String,
     pub created_at: Timespec,
     pub due_date: Option<Timespec>,
@@ -42,7 +42,7 @@ impl Drop for Item {
 #[no_mangle]
 pub extern "C" fn item_new() -> *mut Item {
     let item = Item{
-        id: -1,
+        id: None,
         description: "".to_string(),
         created_at: now().to_timespec(),
         due_date: None,
@@ -58,9 +58,13 @@ pub unsafe extern "C" fn item_destroy(item: *mut Item) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_get_id(item: *const Item) -> c_int {
+pub unsafe extern "C" fn item_get_id(item: *const Item) -> *mut c_int {
     let item = &*item;
-    item.id as c_int
+    match item.id {
+        Some(id) => Box::into_raw(Box::new(id as c_int)),
+        None => ptr::null_mut()
+    }
+
 }
 
 #[no_mangle]
@@ -82,14 +86,16 @@ pub unsafe extern "C" fn item_get_created_at(item: *const Item) -> c_int {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> c_int {
+pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> *mut i64 {
     let item = &*item;
     match item.due_date {
         Some(date) => {
-            date.sec as c_int
+            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.description);
+            Box::into_raw(Box::new(date.sec))
         },
         None => {
-            *ptr::null()
+            println!("item_get_due_date: returning null_mut for {:?}", item.description);
+            ptr::null_mut()
         }
     }
 
