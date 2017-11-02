@@ -11,3 +11,13 @@ jni = { version = "0.5", default-features = false }
 [lib]
 name = "greetings"
 crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+time = "0.1.38"
+uuid = { version = "0.4", features = ["v4"] }
+libc = "0.2.32"
+
+[dependencies.rusqlite]
+version = "0.12"
+# System sqlite might be very old.
+features = ["bundled", "limits"]
