@@ -31,7 +31,6 @@ use utils::{
 };
 
 #[derive(Debug)]
-#[repr(C)]
 pub struct LoginManager {
     pub conn: Arc<Mutex<Connection>>,
     uri: String
@@ -77,7 +76,7 @@ impl LoginManager {
                 time_last_used: row.get(5),
                 time_password_changed: row.get(6),
                 times_used: row.get(7),
-                is_valid: 0
+                is_valid: LoginStatus::Valid
             }
         }).unwrap();
         match login_iter.next() {
@@ -85,7 +84,7 @@ impl LoginManager {
                 match result {
                     Ok(mut login) => {
                         if login.password != password {
-                            login.is_valid = 2;
+                            login.is_valid = LoginStatus::IncorrectPassword;
                         }
                         Some(login)
                     },
@@ -116,8 +115,16 @@ impl LoginManager {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+#[repr(u8)]
+pub enum LoginStatus {
+    Valid,
+    UnknownUsername,
+    IncorrectPassword,
+    Invalid,
+}
+
 #[derive(Debug)]
-#[repr(C)]
 pub struct Login {
     pub id: isize,
     pub username: String,
@@ -127,7 +134,7 @@ pub struct Login {
     pub time_last_used: Option<Timespec>,
     pub time_password_changed: Timespec,
     pub times_used: isize,
-    pub is_valid: isize
+    pub is_valid: LoginStatus
 }
 
 impl Drop for Login {
@@ -150,16 +157,16 @@ pub unsafe extern "C" fn create_login(manager: *const Arc<LoginManager>, usernam
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn validate_login(manager: *const Arc<LoginManager>, username: *const c_char, password: *const c_char) -> c_int {
+pub unsafe extern "C" fn validate_login(manager: *const Arc<LoginManager>, username: *const c_char, password: *const c_char) -> LoginStatus {
     let uname = c_char_to_string(username);
     let pword = c_char_to_string(password);
     let manager = &*manager;
     match manager.fetch_login(uname, pword) {
         Some(mut login) => {
             manager.update_login_as_used(&mut login);
-            login.is_valid as c_int
+            login.is_valid.clone()
         },
-        None => 2 as c_int
+        None => LoginStatus::IncorrectPassword
     }
 }
 
@@ -235,8 +242,7 @@ pub unsafe extern "C" fn login_get_times_used(login: *const Login) -> c_int {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn login_is_valid(login: *const Login) -> c_int {
+pub unsafe extern "C" fn login_is_valid(login: *const Login) -> LoginStatus {
     let login = &*login;
-    login.is_valid as c_int
+    login.is_valid.clone()
 }
-

@@ -10,7 +10,7 @@ class LoginManager: RustObject {
     }
 
     func validateLogin(withUsername username: String, andPassword password: String) -> LoginStatus {
-        return LoginStatus(rawValue: validate_login(self.raw, username, password)) ?? .invalid
+        return LoginStatus(rawValue: validate_login(self.raw, username, password).rawValue) ?? .invalid
     }
 
     func createLogin(withUsername username: String, andPassword password: String) -> Login? {

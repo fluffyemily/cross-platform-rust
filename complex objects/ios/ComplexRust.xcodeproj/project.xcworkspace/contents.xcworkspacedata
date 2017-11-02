@@ -2,12 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:/Users/emilytoop/Development/greetings/complex objects/ios/ComplexRust/ComplexRust/ComplexRust-Bridging-Header.h">
-   </FileRef>
-   <FileRef
-      location = "group:/Users/emilytoop/Development/greetings/complex objects/ios/ComplexRust/ComplexRust/logins.h">
-   </FileRef>
-   <FileRef
       location = "self:ComplexRust.xcodeproj">
    </FileRef>
 </Workspace>

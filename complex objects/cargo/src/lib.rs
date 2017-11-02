@@ -9,6 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 extern crate libc;
+extern crate libsqlite3_sys;
 extern crate rusqlite;
 extern crate time;
 extern crate uuid;
@@ -18,4 +19,3 @@ pub mod categories;
 pub mod items;
 pub mod utils;
 pub mod db;
-

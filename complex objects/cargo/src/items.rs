@@ -24,7 +24,6 @@ use utils::{
 };
 
 #[derive(Debug, Clone)]
-#[repr(C)]
 pub struct Item {
     pub id: Option<isize>,
     pub description: String,

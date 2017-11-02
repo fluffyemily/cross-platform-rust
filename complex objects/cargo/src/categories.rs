@@ -29,7 +29,6 @@ use utils::{
 };
 
 #[derive(Debug)]
-#[repr(C)]
 pub struct CategoryManager {
     conn: Arc<Mutex<Connection>>,
     uri: String
@@ -218,7 +217,6 @@ impl CategoryManager {
 }
 
 #[derive(Debug, Clone)]
-#[repr(C)]
 pub struct Category {
     pub id: isize,
     pub name: String,
