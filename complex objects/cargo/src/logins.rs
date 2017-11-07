@@ -116,7 +116,7 @@ impl LoginManager {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[repr(u8)]
+#[repr(C)]
 pub enum LoginStatus {
     Valid,
     UnknownUsername,
