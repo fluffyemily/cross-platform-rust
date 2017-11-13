@@ -4,7 +4,7 @@
 
 import Foundation
 
-enum LoginStatus: Int {
+enum LoginStatus: UInt32 {
     case valid = 0
     case unknownUsername = 1
     case incorrectPassword = 2
@@ -61,6 +61,7 @@ class Login: RustObject {
     }
 
     var isValid: LoginStatus {
-        return LoginStatus(rawValue: login_is_valid(raw)) ?? .invalid
+        let loginStatus = login_is_valid(raw)
+        return LoginStatus(rawValue: loginStatus.rawValue) ?? .invalid
     }
 }

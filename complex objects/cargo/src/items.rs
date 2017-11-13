@@ -24,7 +24,6 @@ use utils::{
 };
 
 #[derive(Debug, Clone)]
-#[repr(C)]
 pub struct Item {
     pub id: Option<isize>,
     pub description: String,
@@ -75,7 +74,7 @@ pub unsafe extern "C" fn item_get_description(item: *const Item) -> *mut c_char 
 
 #[no_mangle]
 pub unsafe extern "C" fn item_set_description(item: *mut Item, description: *const c_char) {
-    let mut item = &mut*item;
+    let item = &mut*item;
     item.description = c_char_to_string(description);
 }
 
@@ -103,7 +102,7 @@ pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> *mut i64 {
 
 #[no_mangle]
 pub unsafe extern "C" fn item_set_due_date(item: *mut Item, due_date: *const size_t) {
-    let mut item = &mut*item;
+    let item = &mut*item;
     if !due_date.is_null() {
         item.due_date = Some(Timespec::new(due_date as i64, 0));
     } else {
@@ -119,7 +118,7 @@ pub unsafe extern "C" fn item_get_is_complete(item: *const Item) -> c_int {
 
 #[no_mangle]
 pub unsafe extern "C" fn item_set_is_complete(item: *mut Item, is_complete: size_t) {
-    let mut item = &mut*item;
+    let item = &mut*item;
     let is_complete = is_complete as usize;
     match is_complete {
         0 => item.is_complete = false,
