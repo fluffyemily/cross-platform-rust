@@ -7,6 +7,10 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
+extern crate ffi_utils;
+extern crate rusqlite;
+extern crate time;
+extern crate uuid;
 
 use std::os::raw::{
     c_char,
@@ -24,7 +28,7 @@ use time::{
 };
 use uuid::Uuid;
 
-use utils::{
+use ffi_utils::{
     c_char_to_string,
     read_connection,
     string_to_c_char

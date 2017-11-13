@@ -1,0 +1,9 @@
+[package]
+name = "ffi-utils"
+version = "0.1.0"
+authors = ["Emily Toop <etoop@mozilla.com>"]
+
+[dependencies.rusqlite]
+version = "0.12"
+# System sqlite might be very old.
+features = ["bundled", "limits"]

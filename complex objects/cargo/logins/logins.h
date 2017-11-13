@@ -12,8 +12,6 @@ typedef enum {
     Invalid = 3,
 } LoginStatus;
 
-
-
 struct login;
 struct login_manager;
 
@@ -23,7 +21,6 @@ struct login* create_login(const struct login_manager* manager, const char* user
 const LoginStatus validate_login(const struct login_manager* manager, const char* username, const char* password);
 
 // Accessors for Login properties
-const LoginStatus login_is_valid(const struct login* data);
 const size_t login_get_id(const struct login* data);
 const char* login_get_username(const struct login* data);
 const char* login_get_password(const struct login* data);
@@ -33,3 +30,4 @@ const size_t login_get_time_created(const struct login* data);
 const size_t login_get_time_last_used(const struct login* data);
 const size_t login_get_time_password_changed(const struct login* data);
 const size_t login_get_times_used(const struct login* data);
+const LoginStatus login_is_valid(const struct login* data);

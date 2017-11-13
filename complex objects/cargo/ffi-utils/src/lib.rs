@@ -7,6 +7,7 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
+extern crate rusqlite;
 
 use std::os::raw::c_char;
 use std::ffi::{
@@ -17,7 +18,6 @@ use std::sync::{
     Arc
 };
 
-use rusqlite;
 use rusqlite::Connection;
 
 pub fn c_char_to_string(cchar: *const c_char) -> String {

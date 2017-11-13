@@ -8,6 +8,11 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+extern crate rusqlite;
+extern crate ffi_utils;
+extern crate list;
+extern crate logins;
+
 use std::os::raw::{
     c_char
 };
@@ -23,10 +28,10 @@ use rusqlite::{
 use logins::{
     LoginManager
 };
-use categories::{
+use list::{
     CategoryManager
 };
-use utils::{
+use ffi_utils::{
     c_char_to_string,
     read_connection
 };
@@ -100,8 +105,3 @@ pub unsafe extern "C" fn store_read_connection(store: *mut Store) -> *mut Arc<Co
     let conn = Box::new(read_connection(&store.uri));
     Box::into_raw(conn)
 }
-
-
-
-
-
