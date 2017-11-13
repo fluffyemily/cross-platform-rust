@@ -8,8 +8,8 @@ class ToDoListCategoryViewController: UITableViewController {
 
     var categories: [Category] = []
 
-    lazy var dbStore: Store = {
-        return Store.sharedInstance
+    lazy var dbStore: ToodleLib = {
+        return ToodleLib.sharedInstance
     }()
 
     lazy var newCategoryAlertController: UIAlertController = {
@@ -31,7 +31,7 @@ class ToDoListCategoryViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Toodle"
-        categories = self.dbStore.categories.allCategories()
+        categories = self.dbStore.list.allCategories()
          self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newCategory))
     }
 
@@ -66,7 +66,7 @@ class ToDoListCategoryViewController: UITableViewController {
     }
 
     fileprivate func createCategory(categoryName: String) {
-        let category = self.dbStore.categories.createCategory(withName: categoryName)
+        let category = self.dbStore.list.createCategory(withName: categoryName)
         self.categories.append(category)
         self.tableView.reloadData()
     }

@@ -226,9 +226,9 @@ class ItemViewController: UIViewController {
         currentItem.isComplete = (self.statusValueLabel.text ?? "") != "Complete"
 
         if let _ = currentItem.id {
-            try? Store.sharedInstance.categories.update(item: currentItem)
+            try? ToodleLib.sharedInstance.list.update(item: currentItem)
         } else {
-            Store.sharedInstance.categories.add(item: currentItem, toCategory: category)
+            ToodleLib.sharedInstance.list.add(item: currentItem, toCategory: category)
         }
         self.delegate?.itemSaveSuccess(item: currentItem)
     }

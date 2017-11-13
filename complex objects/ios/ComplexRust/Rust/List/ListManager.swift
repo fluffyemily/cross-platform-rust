@@ -4,7 +4,7 @@
 
 import Foundation
 
-class CategoryManager: RustObject {
+class ListManager: RustObject {
     let raw: OpaquePointer
 
     required init(raw: OpaquePointer) {
