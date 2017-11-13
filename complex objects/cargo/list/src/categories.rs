@@ -14,7 +14,7 @@ use std::os::raw::{
     c_int
 };
 
-use ffi_utils::string_to_c_char;
+use ffi_utils::strings::string_to_c_char;
 use items::Item;
 
 #[derive(Debug, Clone)]

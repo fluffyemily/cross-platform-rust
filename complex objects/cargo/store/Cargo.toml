@@ -13,9 +13,3 @@ features = ["bundled", "limits"]
 
 [dependencies.ffi-utils]
 path = "../ffi-utils"
-
-[dependencies.list]
-path = "../list"
-
-[dependencies.logins]
-path = "../logins"

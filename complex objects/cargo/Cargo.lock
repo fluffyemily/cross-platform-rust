@@ -40,9 +40,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "ffi-utils"
 version = "0.1.0"
-dependencies = [
- "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "fuchsia-zircon"
@@ -119,6 +116,7 @@ dependencies = [
  "jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "store 0.1.0",
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -135,6 +133,7 @@ dependencies = [
  "ffi-utils 0.1.0",
  "jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "store 0.1.0",
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -183,8 +182,6 @@ version = "0.1.0"
 dependencies = [
  "ffi-utils 0.1.0",
  "jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "list 0.1.0",
- "logins 0.1.0",
  "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

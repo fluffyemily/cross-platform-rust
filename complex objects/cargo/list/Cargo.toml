@@ -11,6 +11,9 @@ time = "0.1.38"
 uuid = { version = "0.4", features = ["v4"] }
 libc = "0.2.32"
 
+[dependencies.store]
+path = "../store"
+
 [dependencies.ffi-utils]
 path = "../ffi-utils"
 

@@ -12,6 +12,7 @@ extern crate libc;
 extern crate rusqlite;
 extern crate time;
 extern crate uuid;
+extern crate store;
 extern crate ffi_utils;
 
 use std::os::raw::{
@@ -20,34 +21,31 @@ use std::os::raw::{
 };
 use std::sync::{
     Arc,
-    Mutex,
 };
-
-use rusqlite::Connection;
 
 pub mod categories;
 pub mod items;
 
 use categories::Category;
-use ffi_utils::{
-    c_char_to_string,
-    read_connection,
-};
+use ffi_utils::strings::c_char_to_string;
 use items::Item;
+use store::Store;
 
 
 #[derive(Debug)]
-pub struct CategoryManager {
-    conn: Arc<Mutex<Connection>>,
-    uri: String
+#[repr(C)]
+pub struct ListManager {
+    store: Arc<Store>,
 }
 
-impl CategoryManager {
-    pub fn new(uri: String, conn: Arc<Mutex<Connection>>) -> CategoryManager {
-        CategoryManager {
-            conn: conn,
-            uri: uri
-        }
+impl ListManager {
+    pub fn new(store: Arc<Store>) -> ListManager {
+        let manager = ListManager {
+            store: store,
+        };
+        manager.create_categories_table();
+        manager.create_items_table();
+        manager
     }
 
     pub fn create_categories_table(&self) {
@@ -55,7 +53,7 @@ impl CategoryManager {
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL
             )"#;
-        let db = self.conn.lock().unwrap();
+        let db = self.store.write_connection();
         match db.execute(sql, &[]).unwrap() {
             1 => {
                 self.create_category("To Do".to_string());
@@ -66,7 +64,7 @@ impl CategoryManager {
 
     pub fn create_category(&self, name: String) -> Option<Category> {
         let sql = r#"INSERT INTO categories (name) VALUES (?)"#;
-        let db = self.conn.lock().unwrap();
+        let db = self.store.write_connection();
         db.execute(sql, &[&name]).unwrap();
         self.fetch_category(&name)
     }
@@ -74,8 +72,8 @@ impl CategoryManager {
     pub fn fetch_category(&self, name: &String) -> Option<Category> {
         let sql = r#"SELECT id, name FROM categories WHERE name=?"#;
 
-        let db = read_connection(&self.uri);
-        let mut stmt = db.prepare(sql).unwrap();
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
         let mut category_iter = stmt.query_map(&[name], |row| {
             Category {
                 id: row.get(0),
@@ -101,8 +99,8 @@ impl CategoryManager {
     pub fn fetch_categories(&self) -> Vec<Category> {
         let sql = r#"SELECT id, name
                      FROM categories"#;
-        let db = read_connection(&self.uri);
-        let mut stmt = db.prepare(sql).unwrap();
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
         let mut category_iter = stmt.query_map(&[], |row| {
             Category {
                 id: row.get(0),
@@ -138,7 +136,7 @@ impl CategoryManager {
                 is_complete TINYINT DEFAULT 0,
                 category REFERENCES categories(id)
             )"#;
-        let db = self.conn.lock().unwrap();
+        let db = self.store.write_connection();
         db.execute(sql, &[]).unwrap();
     }
 
@@ -146,8 +144,8 @@ impl CategoryManager {
         let sql = r#"SELECT id, description, created_at, due_date, is_complete
                      FROM items
                      WHERE category=?"#;
-        let db = read_connection(&self.uri);
-        let mut stmt = db.prepare(sql).unwrap();
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[&category.id], |row| {
             let complete: i64 = row.get(4);
             Item {
@@ -178,13 +176,14 @@ impl CategoryManager {
     }
 
     pub fn create_item(&self, item: &Item, category_id: i64) -> Option<Item> {
+        println!("Creating item {:?} in category {:?}", item, category_id);
         let sql = r#"INSERT INTO items (description, created_at, due_date, is_complete, category) VALUES (?, ?, ?, ?, ?)"#;
-        let db = self.conn.lock().unwrap();
-        let mut stmt = db.prepare(sql).unwrap();
+        let conn = self.store.write_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
         match stmt.insert(&[&item.description, &item.created_at, &item.due_date, &item.is_complete, &category_id]) {
             Ok(row_id) => {
                 let fetch_sql = r#"SELECT id, description, created_at, due_date, is_complete FROM items WHERE rowid=?"#;
-                stmt = db.prepare(fetch_sql).unwrap();
+                stmt = conn.prepare(fetch_sql).unwrap();
                 let mut item_iter = stmt.query_map(&[&row_id], |row| {
                     let complete: i64 = row.get(4);
                     Item {
@@ -198,7 +197,10 @@ impl CategoryManager {
                 match item_iter.next() {
                     Some(result) => {
                         match result {
-                            Ok(item) => Some(item),
+                            Ok(item) => {
+                                println!("Returning created item {:?}", item);
+                                Some(item)
+                            },
                             Err(e) => {
                                 println!("Failed to fetch item {:?}", e);
                                 None
@@ -206,6 +208,7 @@ impl CategoryManager {
                         }
                     },
                     None => {
+                        println!("No item found");
                         None
                     }
                 }
@@ -219,20 +222,21 @@ impl CategoryManager {
 
     pub fn update_item(&self, item: &Item) {
         let sql = r#"UPDATE items SET description=?, due_date=?, is_complete=? WHERE id=?"#;
-        let db = self.conn.lock().unwrap();
-        let _ = db.execute(sql, &[&item.description, &item.due_date, &item.is_complete, &item.id]);
+        let conn = self.store.write_connection();
+        let _ = conn.execute(sql, &[&item.description, &item.due_date, &item.is_complete, &item.id]);
     }
 }
 
+
 #[no_mangle]
-pub unsafe extern "C" fn get_all_categories(manager: *const Arc<CategoryManager>) -> *mut Vec<Category> {
+pub unsafe extern "C" fn get_all_categories(manager: *const Arc<ListManager>) -> *mut Vec<Category> {
     let manager = &*manager;
     let category_list = Box::new(manager.fetch_categories());
     Box::into_raw(category_list)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_manager_create_item(manager: *const Arc<CategoryManager>, item: *const Item, category_id: c_int) {
+pub unsafe extern "C" fn category_manager_create_item(manager: *const Arc<ListManager>, item: *const Item, category_id: c_int) {
     let manager = &*manager;
     let item = &*item;
     let cat_id = category_id as i64;
@@ -240,14 +244,14 @@ pub unsafe extern "C" fn category_manager_create_item(manager: *const Arc<Catego
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_manager_update_item(manager: *const Arc<CategoryManager>, item: *const Item) {
+pub unsafe extern "C" fn category_manager_update_item(manager: *const Arc<ListManager>, item: *const Item) {
     let manager = &*manager;
     let item = &*item;
     manager.update_item(item)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_new(manager: *const Arc<CategoryManager>, name: *const c_char) -> *mut Category {
+pub unsafe extern "C" fn category_new(manager: *const Arc<ListManager>, name: *const c_char) -> *mut Category {
     let manager = &*manager;
     let name = c_char_to_string(name);
     let category = Box::new(manager.create_category(name).unwrap());

@@ -7,32 +7,24 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
-extern crate rusqlite;
 
-use std::os::raw::c_char;
-use std::ffi::{
-    CString,
-    CStr
-};
-use std::sync::{
-    Arc
-};
-
-use rusqlite::Connection;
-
-pub fn c_char_to_string(cchar: *const c_char) -> String {
-    let c_str = unsafe { CStr::from_ptr(cchar) };
-    let r_str = match c_str.to_str() {
-        Err(_) => "",
-        Ok(string) => string,
+pub mod strings {
+    use std::os::raw::c_char;
+    use std::ffi::{
+        CString,
+        CStr
     };
-    r_str.to_string()
-}
 
-pub fn string_to_c_char(r_string: String) -> *mut c_char {
-    CString::new(r_string).unwrap().into_raw()
-}
+    pub fn c_char_to_string(cchar: *const c_char) -> String {
+        let c_str = unsafe { CStr::from_ptr(cchar) };
+        let r_str = match c_str.to_str() {
+            Err(_) => "",
+            Ok(string) => string,
+        };
+        r_str.to_string()
+    }
 
-pub fn read_connection(uri: &String) -> Arc<Connection> {
-    Arc::new(Connection::open_with_flags(uri.clone(), rusqlite::SQLITE_OPEN_READ_ONLY).unwrap())
+    pub fn string_to_c_char(r_string: String) -> *mut c_char {
+        CString::new(r_string).unwrap().into_raw()
+    }
 }

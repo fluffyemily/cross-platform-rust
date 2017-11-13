@@ -7,10 +7,12 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
-extern crate ffi_utils;
+
 extern crate rusqlite;
 extern crate time;
 extern crate uuid;
+extern crate ffi_utils;
+extern crate store;
 
 use std::os::raw::{
     c_char,
@@ -18,34 +20,32 @@ use std::os::raw::{
 ;
 use std::sync::{
     Arc,
-    Mutex
 };
-
-use rusqlite::Connection;
 use time::{
     now,
     Timespec
 };
 use uuid::Uuid;
 
-use ffi_utils::{
+use ffi_utils::strings::{
     c_char_to_string,
-    read_connection,
     string_to_c_char
 };
+use store::Store;
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct LoginManager {
-    pub conn: Arc<Mutex<Connection>>,
-    uri: String
+    pub store: Arc<Store>,
 }
 
 impl LoginManager {
-    pub fn new(uri: String, conn: Arc<Mutex<Connection>>) -> LoginManager {
-        LoginManager {
-            conn: conn,
-            uri: uri
-        }
+    pub fn new(store: Arc<Store>) -> LoginManager {
+        let manager = LoginManager {
+            store: store,
+        };
+        manager.create_logins_table();
+        manager
     }
 
     pub fn create_logins_table(&self) {
@@ -59,16 +59,16 @@ impl LoginManager {
                 time_password_changed DATETIME DEFAULT CURRENT_TIMESTAMP,
                 times_used INTEGER DEFAULT 0
             )"#;
-        let db = self.conn.lock().unwrap();
-        db.execute(sql, &[]).unwrap();
+        let conn = self.store.write_connection();
+        conn.execute(sql, &[]).unwrap();
     }
 
     pub fn fetch_login(&self, username: String, password: String) -> Option<Login> {
         let sql = r#"SELECT id, username, password, guid, time_created, time_last_used, time_password_changed, times_used
-                     FROM logins
-                     WHERE username=?
-                     LIMIT 1"#;
-        let db = read_connection(&self.uri);
+                    FROM logins
+                    WHERE username=?
+                    LIMIT 1"#;
+        let db = self.store.read_connection();
         let mut stmt = db.prepare(sql).unwrap();
         let mut login_iter = stmt.query_map(&[&username], |row| {
             Login {
@@ -104,7 +104,7 @@ impl LoginManager {
     pub fn create_login(&self, username: String, password: String) -> Option<Login> {
         let sql = r#"INSERT INTO logins (username, password, guid, time_last_used, times_used) VALUES (?1, ?2, ?3, ?4, ?5)"#;
         let time_last_used:Option<isize> = None;
-        let db = self.conn.lock().unwrap();
+        let db = self.store.write_connection();
         db.execute(sql, &[&username, &password, &Uuid::new_v4().simple().to_string(), &time_last_used, &0]).unwrap();
         self.fetch_login(username, password)
     }
@@ -114,7 +114,7 @@ impl LoginManager {
         login.times_used = login.times_used+1;
         login.time_last_used = Some(now().to_timespec());
 
-        let db = self.conn.lock().unwrap();
+        let db = self.store.write_connection();
         db.execute(sql, &[&login.time_last_used, &login.times_used, &login.id]).unwrap();
     }
 }
