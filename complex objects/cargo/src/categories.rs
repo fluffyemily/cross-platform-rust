@@ -19,7 +19,6 @@ use std::sync::{
 };
 
 use rusqlite::Connection;
-use time::Timespec;
 
 use items::Item;
 use utils::{
@@ -318,14 +317,14 @@ pub unsafe extern "C" fn category_list_item_at(category_list: *const Vec<Categor
 
 #[no_mangle]
 pub unsafe extern "C" fn add_category(category_list: *mut Vec<Category>, category: *const Category) {
-    let mut category_list = &mut*category_list;
+    let category_list = &mut*category_list;
     let category = &*category;
     category_list.push((*category).clone())
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn category_add_item(category: *mut Category, item: *const Item) {
-    let mut category = &mut*category;
+    let category = &mut*category;
     let item = &*item;
     category.items.push((*item).clone());
 }

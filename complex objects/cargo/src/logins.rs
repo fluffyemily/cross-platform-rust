@@ -164,7 +164,7 @@ pub unsafe extern "C" fn validate_login(manager: *const Arc<LoginManager>, usern
     match manager.fetch_login(uname, pword) {
         Some(mut login) => {
             manager.update_login_as_used(&mut login);
-            login.is_valid.clone()
+            login.is_valid
         },
         None => LoginStatus::IncorrectPassword
     }
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn login_get_guid(login: *const Login) -> *mut c_char {
 
 #[no_mangle]
 pub unsafe extern "C" fn login_set_guid(login: *mut Login, guid: *const c_char) {
-    let mut login = &mut *login;
+    let login = &mut *login;
     login.guid = c_char_to_string(guid);
 }
 
@@ -244,5 +244,5 @@ pub unsafe extern "C" fn login_get_times_used(login: *const Login) -> c_int {
 #[no_mangle]
 pub unsafe extern "C" fn login_is_valid(login: *const Login) -> LoginStatus {
     let login = &*login;
-    login.is_valid.clone()
+    login.is_valid
 }
