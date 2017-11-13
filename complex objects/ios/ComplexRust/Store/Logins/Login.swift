@@ -62,8 +62,6 @@ class Login: RustObject {
 
     var isValid: LoginStatus {
         let loginStatus = login_is_valid(raw)
-        print("Login Status: \(loginStatus)")
         return LoginStatus(rawValue: loginStatus.rawValue) ?? .invalid
-//        return LoginStatus.valid
     }
 }
