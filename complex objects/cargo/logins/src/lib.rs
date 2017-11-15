@@ -83,21 +83,20 @@ impl LoginManager {
                 is_valid: LoginStatus::Valid
             }
         }).unwrap();
-        match login_iter.next() {
-            Some(result) => {
-                match result {
-                    Ok(mut login) => {
-                        if login.password != password {
-                            login.is_valid = LoginStatus::IncorrectPassword;
-                        }
-                        Some(login)
-                    },
-                    Err(_) => {
-                        None
+
+        if let Some(result) = login_iter.next() {
+            match result.ok() {
+                Some(mut login) => {
+                    if login.password != password {
+                        login.is_valid = LoginStatus::IncorrectPassword;
                     }
-                }
-            },
-            None => None
+                    Some(login)
+                },
+                None => None
+            }
+        } else {
+            println!("No item found");
+            None
         }
     }
 

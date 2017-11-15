@@ -2,7 +2,7 @@
 name = "toodle"
 version = "0.1.0"
 authors = ["Emily Toop <etoop@mozilla.com>"]
-description = "Library for providing To Do List data cross platform"
+description = "Cross Platform Library for providing To Do List data"
 
 [lib]
 name = "toodle"

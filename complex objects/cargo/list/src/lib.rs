@@ -82,17 +82,16 @@ impl ListManager {
             }
         }).unwrap();
 
-        match category_iter.next() {
-            Some(result) => {
-                match result {
-                    Ok(mut category) => {
-                        category.items = self.fetch_items_for_category(&category);
-                        Some(category)
-                    },
-                    Err(_) => None
-                }
-            },
-            None => None
+        if let Some(result) = category_iter.next() {
+            if let Some(mut category) = result.ok() {
+                category.items = self.fetch_items_for_category(&category);
+                Some(category)
+            } else {
+                None
+            }
+        } else {
+            println!("No category found");
+            None
         }
     }
 
@@ -110,18 +109,10 @@ impl ListManager {
         }).unwrap();
 
         let mut category_list: Vec<Category> = Vec::new();
-        loop {
-            match category_iter.next() {
-                Some(result) => {
-                    match result {
-                        Ok(mut category) => {
-                            category.items = self.fetch_items_for_category(&category);
-                            category_list.push(category);
-                        },
-                        Err(_) => {}
-                    }
-                },
-                None => break
+        while let Some(result) = category_iter.next() {
+            if let Some(mut category) = result.ok() {
+                category.items = self.fetch_items_for_category(&category);
+                category_list.push(category);
             }
         }
         category_list
@@ -158,18 +149,9 @@ impl ListManager {
         }).unwrap();
 
         let mut item_list: Vec<Item> = Vec::new();
-
-        loop {
-            match item_iter.next() {
-                Some(result) => {
-                    match result {
-                        Ok(i) => {
-                            item_list.push(i);
-                        },
-                        Err(_) => {}
-                    }
-                },
-                None => break
+        while let Some(result) = item_iter.next() {
+            if let Some(i) = result.ok() {
+                item_list.push(i);
             }
         }
         item_list
@@ -194,23 +176,12 @@ impl ListManager {
                         is_complete: complete != 0
                     }
                 }).unwrap();
-                match item_iter.next() {
-                    Some(result) => {
-                        match result {
-                            Ok(item) => {
-                                println!("Returning created item {:?}", item);
-                                Some(item)
-                            },
-                            Err(e) => {
-                                println!("Failed to fetch item {:?}", e);
-                                None
-                            }
-                        }
-                    },
-                    None => {
-                        println!("No item found");
-                        None
-                    }
+
+                if let Some(result) = item_iter.next() {
+                    result.ok()
+                } else {
+                    println!("No item found");
+                    None
                 }
             },
             Err(e) => {

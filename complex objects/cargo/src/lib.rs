@@ -43,10 +43,9 @@ impl Toodle {
 }
 
 #[no_mangle]
-pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Arc<Toodle> {
+pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
     let uri = c_char_to_string(uri);
-    let toodle = Arc::new(Toodle::new(uri));
-    Box::into_raw(Box::new(toodle))
+    Box::into_raw(Box::new(Toodle::new(uri)))
 }
 
 #[no_mangle]
@@ -55,13 +54,13 @@ pub unsafe extern "C" fn toodle_destroy(toodle: *mut Toodle) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn toodle_logins(toodle: *mut Arc<Toodle>) -> *mut Arc<LoginManager> {
+pub unsafe extern "C" fn toodle_logins(toodle: *mut Toodle) -> *mut Arc<LoginManager> {
     let toodle = &*toodle;
     Box::into_raw(Box::new(toodle.logins.clone()))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn toodle_list(toodle: *mut Arc<Toodle>) -> *mut Arc<ListManager> {
+pub unsafe extern "C" fn toodle_list(toodle: *mut Toodle) -> *mut Arc<ListManager> {
     let toodle = &*toodle;
     Box::into_raw(Box::new(toodle.list.clone()))
 }
