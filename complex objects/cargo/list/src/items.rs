@@ -18,7 +18,7 @@ use std::ptr;
 use time::Timespec;
 use time::now;
 
-use utils::{
+use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
 };

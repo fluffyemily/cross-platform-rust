@@ -115,7 +115,7 @@ class NewLoginViewController: UIViewController {
         guard password == confirmedPassword else {
             return print("Password's do not match")
         }
-        guard let _ = Store.sharedInstance.logins.createLogin(withUsername: username, andPassword: password) else {
+        guard let _ = ToodleLib.sharedInstance.logins.createLogin(withUsername: username, andPassword: password) else {
             return print("failed to create login")
         }
         self.delegate?.accountCreationSuccess(withUsername: username, andPassword: password)

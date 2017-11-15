@@ -18,8 +18,8 @@ class LoginViewController: UIViewController {
         return newVC
     }()
 
-    lazy var dbStore: Store = {
-        return Store.sharedInstance
+    lazy var dbStore: ToodleLib = {
+        return ToodleLib.sharedInstance
     }()
 
     var messageLabel: UILabel = {

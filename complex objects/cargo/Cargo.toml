@@ -1,23 +1,21 @@
 [package]
-name = "greetings"
-version = "0.1.1"
-authors = ["fluffyemily <fluffyemily@mozilla.com>"]
-description = "Example static library project built for iOS"
-publish = false
-
-[target.'cfg(target_os="android")'.dependencies]
-jni = { version = "0.5", default-features = false }
+name = "toodle"
+version = "0.1.0"
+authors = ["Emily Toop <etoop@mozilla.com>"]
+description = "Cross Platform Library for providing To Do List data"
 
 [lib]
-name = "greetings"
+name = "toodle"
 crate-type = ["staticlib", "cdylib"]
 
-[dependencies]
-time = "0.1.38"
-uuid = { version = "0.4", features = ["v4"] }
-libc = "0.2.32"
+[dependencies.ffi-utils]
+path = "ffi-utils"
 
-[dependencies.rusqlite]
-version = "0.12"
-# System sqlite might be very old.
-features = ["bundled", "limits"]
+[dependencies.store]
+path = "store"
+
+[dependencies.logins]
+path = "logins"
+
+[dependencies.list]
+path = "list"
