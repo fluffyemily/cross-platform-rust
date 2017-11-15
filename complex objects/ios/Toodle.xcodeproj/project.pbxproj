@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		7B1F2D701FB0D379000246C9 /* ToodleLib.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1F2D6F1FB0D379000246C9 /* ToodleLib.swift */; };
 		7B2BA8C71F97B24E0093D191 /* ToDoListItemsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2BA8C61F97B24E0093D191 /* ToDoListItemsTableViewController.swift */; };
+		7B383BAD1FB20F000099B12E /* libtoodle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B9D81B01FB0CFC30027C605 /* libtoodle.a */; };
 		7B47BBD61F9A3E7A00FCA5AA /* ListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47BBD51F9A3E7A00FCA5AA /* ListManager.swift */; };
 		7B47BBD81F9A3EDE00FCA5AA /* LoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47BBD71F9A3EDE00FCA5AA /* LoginManager.swift */; };
 		7B47BBDE1F9A518D00FCA5AA /* ItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47BBDD1F9A518D00FCA5AA /* ItemViewController.swift */; };
-		7B9D81B11FB0CFC30027C605 /* libtoodle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B9D81B01FB0CFC30027C605 /* libtoodle.a */; };
 		7B9F01101F794DB2000407E5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F010F1F794DB2000407E5 /* AppDelegate.swift */; };
 		7B9F01121F794DB2000407E5 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9F01111F794DB2000407E5 /* LoginViewController.swift */; };
 		7B9F01151F794DB2000407E5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7B9F01131F794DB2000407E5 /* Main.storyboard */; };
@@ -64,7 +64,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B9F01281F794F3B000407E5 /* libresolv.tbd in Frameworks */,
-				7B9D81B11FB0CFC30027C605 /* libtoodle.a in Frameworks */,
+				7B383BAD1FB20F000099B12E /* libtoodle.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,7 +109,7 @@
 		7B9F01031F794DB1000407E5 = {
 			isa = PBXGroup;
 			children = (
-				7B9F010E1F794DB2000407E5 /* ComplexRust */,
+				7B9F010E1F794DB2000407E5 /* Toodle */,
 				7B9F010D1F794DB2000407E5 /* Products */,
 				7B9F01261F794F3B000407E5 /* Frameworks */,
 			);
@@ -123,7 +123,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7B9F010E1F794DB2000407E5 /* ComplexRust */ = {
+		7B9F010E1F794DB2000407E5 /* Toodle */ = {
 			isa = PBXGroup;
 			children = (
 				7B2BA8941F963C5C0093D191 /* Rust */,
@@ -135,7 +135,7 @@
 				7B9F01181F794DB2000407E5 /* LaunchScreen.storyboard */,
 				7B9F01341F7D1634000407E5 /* NSLayoutConstraint+Utils.swift */,
 			);
-			path = ComplexRust;
+			path = Toodle;
 			sourceTree = "<group>";
 		};
 		7B9F01261F794F3B000407E5 /* Frameworks */ = {
@@ -212,7 +212,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 7B9F01071F794DB1000407E5 /* Build configuration list for PBXProject "ComplexRust" */;
+			buildConfigurationList = 7B9F01071F794DB1000407E5 /* Build configuration list for PBXProject "Toodle" */;
 			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -431,7 +431,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7B9F01071F794DB1000407E5 /* Build configuration list for PBXProject "ComplexRust" */ = {
+		7B9F01071F794DB1000407E5 /* Build configuration list for PBXProject "Toodle" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7B9F011C1F794DB2000407E5 /* Debug */,
