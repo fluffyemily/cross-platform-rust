@@ -109,7 +109,7 @@
 		7B9F01031F794DB1000407E5 = {
 			isa = PBXGroup;
 			children = (
-				7B9F010E1F794DB2000407E5 /* ComplexRust */,
+				7B9F010E1F794DB2000407E5 /* Toodle */,
 				7B9F010D1F794DB2000407E5 /* Products */,
 				7B9F01261F794F3B000407E5 /* Frameworks */,
 			);
@@ -123,7 +123,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7B9F010E1F794DB2000407E5 /* ComplexRust */ = {
+		7B9F010E1F794DB2000407E5 /* Toodle */ = {
 			isa = PBXGroup;
 			children = (
 				7B2BA8941F963C5C0093D191 /* Rust */,
@@ -135,7 +135,7 @@
 				7B9F01181F794DB2000407E5 /* LaunchScreen.storyboard */,
 				7B9F01341F7D1634000407E5 /* NSLayoutConstraint+Utils.swift */,
 			);
-			path = ComplexRust;
+			path = Toodle;
 			sourceTree = "<group>";
 		};
 		7B9F01261F794F3B000407E5 /* Frameworks */ = {
