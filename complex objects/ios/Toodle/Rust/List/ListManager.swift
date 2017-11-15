@@ -6,24 +6,19 @@ import Foundation
 
 class ListManager: RustObject {
     let raw: OpaquePointer
-    fileprivate var categoriesCallback: (([Category]) -> ())?
 
     required init(raw: OpaquePointer) {
         self.raw = raw
     }
 
-    func allCategories(closure: @escaping ([Category]) -> ()) {
-        self.categoriesCallback = closure
-        let cb: @convention(c) ((UnsafeMutablePointer<OpaquePointer?>?)) -> Void = { (categories) in
-            var allCategories: [Category] = []
-            for index in 0..<category_list_count(categories) {
-                let category = Category(raw: category_list_item_at(categories, index))
-                allCategories.append(category)
-            }
-            print("\(allCategories)")
-            closure(allCategories)
+    func allCategories() -> [Category] {
+        let categories = get_all_categories(self.raw)
+        var allCategories: [Category] = []
+        for index in 0..<category_list_count(categories) {
+            let category = Category(raw: category_list_item_at(categories, index))
+            allCategories.append(category)
         }
-        get_all_categories(self.raw, cb)
+        return allCategories
     }
 
     func createCategory(withName name: String) -> Category {
@@ -36,15 +31,5 @@ class ListManager: RustObject {
 
     func update(item: Item) throws {
         category_manager_update_item(raw, item.raw)
-    }
-
-    func callback(categories: (UnsafeMutablePointer<OpaquePointer?>?)) {
-        var allCategories: [Category] = []
-        for index in 0..<category_list_count(categories) {
-            let category = Category(raw: category_list_item_at(categories, index))
-            allCategories.append(category)
-        }
-        print("\(allCategories)")
-        self.categoriesCallback?(allCategories)
     }
 }
