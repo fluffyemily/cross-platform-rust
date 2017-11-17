@@ -64,3 +64,39 @@ pub unsafe extern "C" fn toodle_list(toodle: *mut Toodle) -> *mut Arc<ListManage
     let toodle = &*toodle;
     Box::into_raw(Box::new(toodle.list.clone()))
 }
+
+ #[cfg(target_os="android")]
+ #[allow(non_snake_case)]
+ pub mod android {
+    extern crate jni;
+
+    use super::*;
+    use self::jni::JNIEnv;
+    use self::jni::objects::{JClass, JString};
+    use self::jni::sys::{jlong};
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_newToodle(env: JNIEnv, _: JClass, db_path: JString) -> jlong {
+        let db_path_uri: String = env.get_string(db_path).expect("Couldn't get db path").into(); 
+        Box::into_raw(Box::new(Toodle::new(db_path_uri))) as jlong
+    }
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_toodleDestroy(_: JNIEnv, _: JClass, toodle: *mut Toodle) {
+        let _ = &*toodle;
+    }
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_loginManager(_: JNIEnv, _: JClass, toodle: *mut Toodle) -> jlong {
+        let toodle = &*toodle;
+        Box::into_raw(Box::new(toodle.logins.clone())) as jlong
+    }
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_newCategory(_: JNIEnv, _: JClass, toodle: *mut Toodle, _: JString) {
+        //let category_name: String = env.get_string(name).expect("Couldn't get category name").into();
+        let toodle = &*toodle;
+        let name: String = String::from("test");
+        let _ = toodle.list.create_category(name);
+    }
+ }

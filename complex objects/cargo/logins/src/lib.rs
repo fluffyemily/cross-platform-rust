@@ -150,6 +150,35 @@ impl Login {
 
 }
 
+#[cfg(target_os="android")]
+#[allow(non_snake_case)]
+pub mod android {
+    extern crate jni;
+
+    use super::*;
+    use self::jni::JNIEnv;
+    use self::jni::objects::{JClass, JString};
+    use self::jni::sys::{jlong};
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_validateLogin(env: JNIEnv, _: JClass, manager: *const Arc<LoginManager>, username: JString, password: JString) -> LoginStatus {
+        let manager = &*manager;
+        // let username: String = env.get_string(username).expect("Couldn't get db path");
+        // let password: String = env.get_string(password).expect("Couldn't get db path").into();
+
+        let username: String = String::from("gri");
+        let password: String = String::from("sha");
+
+        match manager.fetch_login(username, password) {
+            Some(mut login) => {
+                manager.update_login_as_used(&mut login);
+                login.is_valid
+            },
+            None => LoginStatus::IncorrectPassword
+        }
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn create_login(manager: *const Arc<LoginManager>, username: *const c_char, password: *const c_char) -> *mut Login {
     let uname = c_char_to_string(username);
