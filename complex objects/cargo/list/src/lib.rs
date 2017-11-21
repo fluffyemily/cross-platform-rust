@@ -54,6 +54,8 @@ impl ListManager {
                 name TEXT NOT NULL
             )"#;
         let db = self.store.write_connection();
+        let val = db.execute(sql, &[]).unwrap();
+        println!("create table result: {:?}", val);
         match db.execute(sql, &[]).unwrap() {
             1 => {
                 self.create_category("To Do".to_string());
@@ -204,6 +206,25 @@ pub unsafe extern "C" fn get_all_categories(manager: *const Arc<ListManager>) ->
     let manager = &*manager;
     let category_list = Box::new(manager.fetch_categories());
     Box::into_raw(category_list)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn category_list_destroy(category_list: *mut Vec<Category>) {
+    let _ = Box::from_raw(category_list);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn category_list_count(category_list: *const Vec<Category>) -> c_int {
+    let category_list = &*category_list;
+    category_list.len() as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn category_list_item_at(category_list: *const Vec<Category>, index: size_t) -> *const Category {
+    let category_list = &*category_list;
+    let index = index as usize;
+    let category = Box::new(category_list[index].clone());
+    Box::into_raw(category)
 }
 
 #[no_mangle]

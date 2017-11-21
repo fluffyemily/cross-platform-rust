@@ -169,7 +169,7 @@ pub unsafe extern "C" fn validate_login(manager: *const Arc<LoginManager>, usern
             manager.update_login_as_used(&mut login);
             login.is_valid
         },
-        None => LoginStatus::IncorrectPassword
+        None => LoginStatus::UnknownUsername
     }
 }
 

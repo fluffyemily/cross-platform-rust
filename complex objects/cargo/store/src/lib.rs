@@ -56,7 +56,7 @@ impl Store {
 }
 
 #[no_mangle]
-pub extern "C" fn new_store(uri: *const c_char) -> *mut Arc<Store> {
+pub extern "C" fn new_store(uri: *const c_char) -> *mut Store {
     let uri = c_char_to_string(uri);
     let store = Arc::new(Store::new(uri));
     Box::into_raw(Box::new(store))

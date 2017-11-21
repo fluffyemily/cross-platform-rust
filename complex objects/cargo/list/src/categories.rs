@@ -69,25 +69,6 @@ pub unsafe extern "C" fn category_item_at(item_list: *const Vec<Item>, index: si
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_list_destroy(category_list: *mut Vec<Category>) {
-    let _ = Box::from_raw(category_list);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn category_list_count(category_list: *const Vec<Category>) -> c_int {
-    let category_list = &*category_list;
-    category_list.len() as c_int
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn category_list_item_at(category_list: *const Vec<Category>, index: size_t) -> *const Category {
-    let category_list = &*category_list;
-    let index = index as usize;
-    let category = Box::new(category_list[index].clone());
-    Box::into_raw(category)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn add_category(category_list: *mut Vec<Category>, category: *const Category) {
     let category_list = &mut*category_list;
     let category = &*category;
