@@ -203,6 +203,7 @@ impl ListManager {
 
 #[no_mangle]
 pub unsafe extern "C" fn get_all_categories(manager: *const Arc<ListManager>) -> *mut Vec<Category> {
+    // update to take a callback object
     let manager = &*manager;
     let category_list = Box::new(manager.fetch_categories());
     Box::into_raw(category_list)
