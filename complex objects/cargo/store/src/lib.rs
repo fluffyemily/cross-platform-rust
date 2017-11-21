@@ -27,6 +27,7 @@ use ffi_utils::strings::c_char_to_string;
 
 #[derive(Debug)]
 #[repr(C)]
+/// Store containing a SQLite connection
 pub struct Store {
     conn: Mutex<Arc<Connection>>,
     uri: String,
