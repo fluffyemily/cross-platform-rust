@@ -4,7 +4,7 @@ This is an example project showing a Rust library building for and running on mu
 
 If you want to create a simple Rust library that passes primitives to calling code on both iOS and Android, check out the `basic` project.
 
-If you want to create a Rust library that passes more complex objects, check out the `complex objects` project.
+If you want to create a Rust library that passes more complex objects, check out the `complex` project.
 
 You can read the blog posts for which this is an example:
 
