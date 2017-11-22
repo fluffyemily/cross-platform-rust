@@ -15,18 +15,16 @@ extern crate uuid;
 extern crate store;
 extern crate ffi_utils;
 
-use std::os::raw::{
-    c_char,
-    c_int
-};
+use std::os::raw::c_char;
 use std::sync::{
     Arc,
 };
+use uuid::Uuid;
 
-pub mod categories;
+pub mod labels;
 pub mod items;
 
-use categories::Category;
+use labels::Label;
 use ffi_utils::strings::c_char_to_string;
 use items::Item;
 use store::Store;
@@ -43,108 +41,125 @@ impl ListManager {
         let manager = ListManager {
             store: store,
         };
-        manager.create_categories_table();
+        manager.create_labels_table();
         manager.create_items_table();
+        manager.create_item_labels_table();
         manager
     }
 
-    pub fn create_categories_table(&self) {
-        let sql = r#"CREATE TABLE IF NOT EXISTS categories (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL
-            )"#;
-        let db = self.store.write_connection();
-        match db.execute(sql, &[]).unwrap() {
-            1 => {
-                self.create_category("To Do".to_string());
-            },
-            _ => {}
-        };
-    }
-
-    pub fn create_category(&self, name: String) -> Option<Category> {
-        let sql = r#"INSERT INTO categories (name) VALUES (?)"#;
-        let db = self.store.write_connection();
-        db.execute(sql, &[&name]).unwrap();
-        self.fetch_category(&name)
-    }
-
-    pub fn fetch_category(&self, name: &String) -> Option<Category> {
-        let sql = r#"SELECT id, name FROM categories WHERE name=?"#;
-
-        let conn = self.store.read_connection();
-        let mut stmt = conn.prepare(sql).unwrap();
-        let mut category_iter = stmt.query_map(&[name], |row| {
-            Category {
-                id: row.get(0),
-                name: row.get(1),
-                items: Vec::new()
-            }
-        }).unwrap();
-
-        if let Some(result) = category_iter.next() {
-            if let Some(mut category) = result.ok() {
-                category.items = self.fetch_items_for_category(&category);
-                Some(category)
-            } else {
-                None
-            }
-        } else {
-            println!("No category found");
-            None
-        }
-    }
-
-    pub fn fetch_categories(&self) -> Vec<Category> {
-        let sql = r#"SELECT id, name
-                     FROM categories"#;
-        let conn = self.store.read_connection();
-        let mut stmt = conn.prepare(sql).unwrap();
-        let mut category_iter = stmt.query_map(&[], |row| {
-            Category {
-                id: row.get(0),
-                name: row.get(1),
-                items: Vec::new()
-            }
-        }).unwrap();
-
-        let mut category_list: Vec<Category> = Vec::new();
-        while let Some(result) = category_iter.next() {
-            if let Some(mut category) = result.ok() {
-                category.items = self.fetch_items_for_category(&category);
-                category_list.push(category);
-            }
-        }
-        category_list
-    }
-
-    pub fn create_items_table(&self) {
-        let sql = r#"CREATE TABLE IF NOT EXISTS items (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                description TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                due_date DATETIME,
-                is_complete TINYINT DEFAULT 0,
-                category REFERENCES categories(id)
+    pub fn create_labels_table(&self) {
+        let sql = r#"CREATE TABLE IF NOT EXISTS labels (
+                name TEXT NOT NULL PRIMARY KEY,
+                color TEXT NOT NULL
             )"#;
         let db = self.store.write_connection();
         db.execute(sql, &[]).unwrap();
     }
 
-    pub fn fetch_items_for_category(&self, category: &Category) -> Vec<Item> {
-        let sql = r#"SELECT id, description, created_at, due_date, is_complete
-                     FROM items
-                     WHERE category=?"#;
+    pub fn create_label(&self, name: String, color: String) -> Option<Label> {
+        let sql = r#"INSERT INTO labels (name, color) VALUES (?1, ?2)"#;
+        let db = self.store.write_connection();
+        db.execute(sql, &[&name, &color]).unwrap();
+        self.fetch_label(&name)
+    }
+
+    pub fn fetch_label(&self, name: &String) -> Option<Label> {
+        let sql = r#"SELECT name, color FROM labels WHERE name=?"#;
+
         let conn = self.store.read_connection();
         let mut stmt = conn.prepare(sql).unwrap();
-        let mut item_iter = stmt.query_map(&[&category.id], |row| {
-            let complete: i64 = row.get(4);
+        let mut label_iter = stmt.query_map(&[name], |row| {
+            Label {
+                name: row.get(0),
+                color: row.get(1)
+            }
+        }).unwrap();
+
+        if let Some(result) = label_iter.next() {
+            result.ok()
+        } else {
+            println!("No label found for name {:?}", name);
+            None
+        }
+    }
+
+    pub fn fetch_labels(&self) -> Vec<Label> {
+        let sql = r#"SELECT name, color
+                     FROM labels"#;
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let mut label_iter = stmt.query_map(&[], |row| {
+            Label {
+                name: row.get(0),
+                color: row.get(1)
+            }
+        }).unwrap();
+
+        let mut label_list: Vec<Label> = Vec::new();
+        while let Some(result) = label_iter.next() {
+            if let Some(mut label) = result.ok() {
+                label_list.push(label);
+            }
+        }
+        label_list
+    }
+
+    pub fn fetch_labels_for_item(&self, item_uuid: &String) -> Vec<Label> {
+        let sql = r#"SELECT name, color
+                     FROM labels LEFT JOIN item_labels on item_labels.item_uuid=?"#;
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let mut label_iter = stmt.query_map(&[item_uuid], |row| {
+            Label {
+                name: row.get(0),
+                color: row.get(1)
+            }
+        }).unwrap();
+
+        let mut label_list: Vec<Label> = Vec::new();
+        while let Some(result) = label_iter.next() {
+            if let Some(mut label) = result.ok() {
+                label_list.push(label);
+            }
+        }
+        label_list
+    }
+
+    pub fn create_items_table(&self) {
+        let sql = r#"CREATE TABLE IF NOT EXISTS items (
+                uuid TEXT NOT NULL PRIMARY KEY,
+                name TEXT NOT NULL,
+                due_date DATETIME,
+                completion_date DATETIME
+            )"#;
+        let db = self.store.write_connection();
+        db.execute(sql, &[]).unwrap();
+    }
+
+    pub fn create_item_labels_table(&self) {
+        let sql = r#"CREATE TABLE IF NOT EXISTS item_labels (
+                item_uuid TEXT NOT NULL,
+                label_name TEXT NOT NULL,
+                PRIMARY_KEY(item_uuid, label_name)
+            )"#;
+        let db = self.store.write_connection();
+        db.execute(sql, &[]).unwrap();
+    }
+
+    pub fn fetch_items_with_label(&self, label: &Label) -> Vec<Item> {
+        let sql = r#"SELECT uuid, name, created_at, due_date, completion_date
+                     FROM items LEFT JOIN item_labels on items.uuid=item_label.item_uuid
+                     WHERE item_labels.label_name=?"#;
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let mut item_iter = stmt.query_map(&[&label.name], |row| {
+            let uuid: String = row.get(0);
             Item {
-                id: row.get(0),
-                description: row.get(1),
-                created_at: row.get(2),
-                due_date: row.get(3),
-                is_complete: complete != 0
+                uuid: uuid.clone(),
+                name: row.get(1),
+                due_date: row.get(2),
+                completion_date: row.get(3),
+                labels: self.fetch_labels_for_item(&uuid)
             }
         }).unwrap();
 
@@ -157,74 +172,77 @@ impl ListManager {
         item_list
     }
 
-    pub fn create_item(&self, item: &Item, category_id: i64) -> Option<Item> {
-        println!("Creating item {:?} in category {:?}", item, category_id);
-        let sql = r#"INSERT INTO items (description, created_at, due_date, is_complete, category) VALUES (?, ?, ?, ?, ?)"#;
-        let conn = self.store.write_connection();
-        let mut stmt = conn.prepare(sql).unwrap();
-        match stmt.insert(&[&item.description, &item.created_at, &item.due_date, &item.is_complete, &category_id]) {
-            Ok(row_id) => {
-                let fetch_sql = r#"SELECT id, description, created_at, due_date, is_complete FROM items WHERE rowid=?"#;
-                stmt = conn.prepare(fetch_sql).unwrap();
-                let mut item_iter = stmt.query_map(&[&row_id], |row| {
-                    let complete: i64 = row.get(4);
-                    Item {
-                        id: row.get(0),
-                        description: row.get(1),
-                        created_at: row.get(2),
-                        due_date: row.get(3),
-                        is_complete: complete != 0
-                    }
-                }).unwrap();
+    pub fn fetch_item(&self, uuid: &String) -> Option<Item> {
+        let sql = r#"SELECT uuid, name, due_date, completion_date FROM items WHERE uuid=?"#;
 
-                if let Some(result) = item_iter.next() {
-                    result.ok()
-                } else {
-                    println!("No item found");
-                    None
-                }
-            },
-            Err(e) => {
-                println!("Failed to create item {:?}", e);
-                None
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let mut item_iter = stmt.query_map(&[uuid], |row| {
+            Item {
+                uuid: row.get(0),
+                name: row.get(1),
+                due_date: row.get(2),
+                completion_date: row.get(3),
+                labels: self.fetch_labels_for_item(uuid)
             }
+        }).unwrap();
+
+        if let Some(result) = item_iter.next() {
+            result.ok()
+        } else {
+            println!("No item found for uuid {:?}", uuid);
+            None
         }
     }
 
-    pub fn update_item(&self, item: &Item) {
-        let sql = r#"UPDATE items SET description=?, due_date=?, is_complete=? WHERE id=?"#;
+    pub fn create_item(&self, item: &Item) -> Option<Item> {
+        println!("Creating item {:?}", item);
+        let item_sql = r#"INSERT INTO items (uuid, name, due_date, completion_date) VALUES (?, ?, ?, ?)"#;
         let conn = self.store.write_connection();
-        let _ = conn.execute(sql, &[&item.description, &item.due_date, &item.is_complete, &item.id]);
+        let item_uuid = Uuid::new_v4().simple().to_string();
+        conn.execute(item_sql, &[&item_uuid, &item.name, &item.due_date, &item.completion_date]).unwrap();
+
+        let item_label_sql = r#"INSERT INTO item_labels (item_uuid, label_name) VALUES (?, ?)"#;
+        let _ = item.labels.iter().map(|label| {
+            conn.execute(&item_label_sql, &[&item_uuid, &label.name]).unwrap();
+        });
+        self.fetch_item(&item_uuid)
+    }
+
+    pub fn update_item(&self, item: &Item) {
+        let sql = r#"UPDATE items SET name=?, due_date=?, completion_date=? WHERE uuid=?"#;
+        let conn = self.store.write_connection();
+        let _ = conn.execute(sql, &[&item.name, &item.due_date, &item.completion_date, &item.uuid]);
     }
 }
 
 
 #[no_mangle]
-pub unsafe extern "C" fn get_all_categories(manager: *const Arc<ListManager>) -> *mut Vec<Category> {
+pub unsafe extern "C" fn list_manager_get_all_labels(manager: *const Arc<ListManager>) -> *mut Vec<Label> {
     let manager = &*manager;
-    let category_list = Box::new(manager.fetch_categories());
-    Box::into_raw(category_list)
+    let label_list = Box::new(manager.fetch_labels());
+    Box::into_raw(label_list)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_manager_create_item(manager: *const Arc<ListManager>, item: *const Item, category_id: c_int) {
+pub unsafe extern "C" fn list_manager_create_item(manager: *const Arc<ListManager>, item: *const Item) {
     let manager = &*manager;
     let item = &*item;
-    let cat_id = category_id as i64;
-    manager.create_item(item, cat_id);
+    manager.create_item(item);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_manager_update_item(manager: *const Arc<ListManager>, item: *const Item) {
+pub unsafe extern "C" fn list_manager_update_item(manager: *const Arc<ListManager>, item: *const Item) {
     let manager = &*manager;
     let item = &*item;
     manager.update_item(item)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn category_new(manager: *const Arc<ListManager>, name: *const c_char) -> *mut Category {
+pub unsafe extern "C" fn list_manager_create_label(manager: *const Arc<ListManager>, name: *const c_char, color: *const c_char) -> *mut Label {
     let manager = &*manager;
     let name = c_char_to_string(name);
-    let category = Box::new(manager.create_category(name).unwrap());
-    Box::into_raw(category)
+    let color = c_char_to_string(color);
+    let label = Box::new(manager.create_label(name, color).unwrap());
+    Box::into_raw(label)
 }
