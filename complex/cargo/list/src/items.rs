@@ -16,20 +16,20 @@ use std::os::raw::{
 use std::ptr;
 
 use time::Timespec;
-use time::now;
 
 use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
 };
+use labels::Label;
 
 #[derive(Debug, Clone)]
 pub struct Item {
-    pub id: Option<isize>,
-    pub description: String,
-    pub created_at: Timespec,
+    pub uuid: String,
+    pub name: String,
     pub due_date: Option<Timespec>,
-    pub is_complete: bool
+    pub completion_date: Option<Timespec>,
+    pub labels: Vec<Label>,
 }
 
 impl Drop for Item {
@@ -41,11 +41,11 @@ impl Drop for Item {
 #[no_mangle]
 pub extern "C" fn item_new() -> *mut Item {
     let item = Item{
-        id: None,
-        description: "".to_string(),
-        created_at: now().to_timespec(),
+        uuid: "".to_string(),
+        name: "".to_string(),
         due_date: None,
-        is_complete: false
+        completion_date: None,
+        labels: vec![]
     };
     let boxed_item = Box::new(item);
     Box::into_raw(boxed_item)
@@ -57,31 +57,15 @@ pub unsafe extern "C" fn item_destroy(item: *mut Item) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_get_id(item: *const Item) -> *mut c_int {
+pub unsafe extern "C" fn item_get_name(item: *const Item) -> *mut c_char {
     let item = &*item;
-    match item.id {
-        Some(id) => Box::into_raw(Box::new(id as c_int)),
-        None => ptr::null_mut()
-    }
-
+    string_to_c_char(item.name.clone())
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_get_description(item: *const Item) -> *mut c_char {
-    let item = &*item;
-    string_to_c_char(item.description.clone())
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn item_set_description(item: *mut Item, description: *const c_char) {
+pub unsafe extern "C" fn item_set_name(item: *mut Item, name: *const c_char) {
     let item = &mut*item;
-    item.description = c_char_to_string(description);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn item_get_created_at(item: *const Item) -> c_int {
-    let item = &*item;
-    item.created_at.sec as c_int
+    item.name = c_char_to_string(name);
 }
 
 #[no_mangle]
@@ -89,11 +73,11 @@ pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> *mut i64 {
     let item = &*item;
     match item.due_date {
         Some(date) => {
-            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.description);
+            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.name);
             Box::into_raw(Box::new(date.sec))
         },
         None => {
-            println!("item_get_due_date: returning null_mut for {:?}", item.description);
+            println!("item_get_due_date: returning null_mut for {:?}", item.name);
             ptr::null_mut()
         }
     }
@@ -111,17 +95,48 @@ pub unsafe extern "C" fn item_set_due_date(item: *mut Item, due_date: *const siz
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_get_is_complete(item: *const Item) -> c_int {
+pub unsafe extern "C" fn item_get_completion_date(item: *const Item) -> *mut i64 {
     let item = &*item;
-    item.is_complete as c_int
+    match item.completion_date {
+        Some(date) => {
+            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.name);
+            Box::into_raw(Box::new(date.sec))
+        },
+        None => {
+            println!("item_get_due_date: returning null_mut for {:?}", item.name);
+            ptr::null_mut()
+        }
+    }
+
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_set_is_complete(item: *mut Item, is_complete: size_t) {
+pub unsafe extern "C" fn item_set_completion_date(item: *mut Item, completion_date: *const size_t) {
     let item = &mut*item;
-    let is_complete = is_complete as usize;
-    match is_complete {
-        0 => item.is_complete = false,
-        _ => item.is_complete = true
+    if !completion_date.is_null() {
+        item.completion_date = Some(Timespec::new(completion_date as i64, 0));
+    } else {
+        item.completion_date = None;
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn item_get_labels(item: *const Item) -> *mut Vec<Label> {
+    let item = &*item;
+    let boxed_labels = Box::new(item.labels.clone());
+    Box::into_raw(boxed_labels)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn item_labels_count(item: *const Item) -> c_int {
+    let item = &*item;
+    item.labels.len() as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: size_t) -> *const Label {
+    let label_list = &*label_list;
+    let index = index as usize;
+    let label = Box::new(label_list[index].clone());
+    Box::into_raw(label)
 }

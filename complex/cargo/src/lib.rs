@@ -10,7 +10,6 @@
 
 extern crate ffi_utils;
 extern crate store;
-extern crate logins;
 extern crate list;
 
 use std::os::raw::{
@@ -21,13 +20,11 @@ use std::sync::{
 };
 
 use ffi_utils::strings::c_char_to_string;
-use logins::LoginManager;
 use list::ListManager;
 use store::Store;
 
 pub struct Toodle {
     store: Arc<Store>,
-    logins: Arc<LoginManager>,
     list: Arc<ListManager>
 }
 
@@ -36,7 +33,6 @@ impl Toodle {
         let store = Arc::new(Store::new(uri));
         Toodle {
             store: store.clone(),
-            logins: Arc::new(LoginManager::new(store.clone())),
             list: Arc::new(ListManager::new(store.clone()))
         }
     }
@@ -51,12 +47,6 @@ pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
 #[no_mangle]
 pub unsafe extern "C" fn toodle_destroy(toodle: *mut Toodle) {
     let _ = Box::from_raw(toodle);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn toodle_logins(toodle: *mut Toodle) -> *mut Arc<LoginManager> {
-    let toodle = &*toodle;
-    Box::into_raw(Box::new(toodle.logins.clone()))
 }
 
 #[no_mangle]
