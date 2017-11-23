@@ -30,7 +30,7 @@ pub struct Toodle {
 
 impl Toodle {
     fn new(uri: String) -> Toodle {
-        let store = Arc::new(Store::new(uri));
+        let store = Arc::new(Store::new(Some(uri)));
         Toodle {
             store: store.clone(),
             list: Arc::new(ListManager::new(store.clone()))

@@ -30,7 +30,7 @@ use ffi_utils::strings::c_char_to_string;
 /// Store containing a SQLite connection
 pub struct Store {
     conn: Mutex<Arc<Connection>>,
-    uri: String,
+    uri: Option<String>,
 }
 
 impl Drop for Store {
@@ -40,10 +40,14 @@ impl Drop for Store {
 }
 
 impl Store {
-    pub fn new(uri: String) -> Self {
+    pub fn new(uri: Option<String>) -> Self {
+        let c = match &uri {
+            &Some(ref u) => Connection::open(u.clone()).unwrap(),
+            &None => Connection::open_in_memory_with_flags(rusqlite::SQLITE_OPEN_URI | rusqlite::SQLITE_OPEN_READ_WRITE).unwrap(),
+        };
         Store {
-            conn: Mutex::new(Arc::new(Connection::open(uri.clone()).unwrap())),
-            uri: uri.clone(),
+            conn: Mutex::new(Arc::new(c)),
+            uri: uri,
         }
     }
 
@@ -52,14 +56,18 @@ impl Store {
     }
 
     pub fn read_connection(&self) -> Arc<Connection> {
-        Arc::new(Connection::open_with_flags(self.uri.clone(), rusqlite::SQLITE_OPEN_READ_ONLY).unwrap())
+        let c = match &self.uri {
+            &Some(ref u) => Connection::open_with_flags(u.clone(), rusqlite::SQLITE_OPEN_READ_ONLY).unwrap(),
+            &None => Connection::open_in_memory_with_flags(rusqlite::SQLITE_OPEN_READ_ONLY).unwrap()
+        };
+        Arc::new(c)
     }
 }
 
 #[no_mangle]
 pub extern "C" fn new_store(uri: *const c_char) -> *mut Arc<Store> {
     let uri = c_char_to_string(uri);
-    let store = Arc::new(Store::new(uri));
+    let store = Arc::new(Store::new(Some(uri)));
     Box::into_raw(Box::new(store))
 }
 

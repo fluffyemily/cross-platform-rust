@@ -143,7 +143,10 @@ impl ListManager {
                 PRIMARY KEY(item_uuid, label_name)
             )"#;
         let db = self.store.write_connection();
-        db.execute(sql, &[]).unwrap();
+        let r = db.execute(sql, &[]);
+        if r.is_err() {
+            println!("failed to create item_labels table {:?}", r.err());
+        }
     }
 
     pub fn fetch_items_with_label(&self, label: &Label) -> Vec<Item> {
@@ -196,7 +199,6 @@ impl ListManager {
     }
 
     pub fn create_item(&self, item: &Item) -> Option<Item> {
-        println!("Creating item {:?}", item);
         let item_sql = r#"INSERT INTO items (uuid, name, due_date, completion_date) VALUES (?, ?, ?, ?)"#;
         let conn = self.store.write_connection();
         let item_uuid = Uuid::new_v4().simple().to_string();
@@ -261,4 +263,72 @@ pub unsafe extern "C" fn list_manager_create_label(manager: *const Arc<ListManag
     let color = c_char_to_string(color);
     let label = Box::new(manager.create_label(name, color).unwrap());
     Box::into_raw(label)
+}
+
+
+
+
+
+#[cfg(test)]
+mod test {
+    use super::Store;
+    use super::ListManager;
+    use std::sync::Arc;
+
+    fn list_manager() -> ListManager {=
+        let store = Arc::new(Store::new(None));
+        ListManager::new(store)
+    }
+
+    #[test]
+    fn test_new_list_manager() {
+        let manager = list_manager();
+        let sql = r#"SELECT count(name) FROM sqlite_master WHERE type='table' AND name=?"#;
+        let conn = manager.store.write_connection();
+        // test that items table has been created
+        let mut stmt = conn.prepare(sql).unwrap();
+        let tables = [&"items", &"labels", &"item_labels"];
+        for &table in tables.iter() {
+            let mut r = stmt.query(&[table]).unwrap();
+            match r.next() {
+                Some(Ok(row)) => {
+                    let count: i64 = row.get(0);
+                    assert_eq!(count, 1);
+                },
+                _ => assert!(false),
+            }
+        }
+    }
+
+    #[test]
+    fn test_create_label() {
+    }
+
+    #[test]
+    fn test_fetch_label() {
+    }
+
+    #[test]
+    fn test_fetch_labels() {
+    }
+
+    #[test]
+    fn test_fetch_labels_for_item() {
+    }
+
+    #[test]
+    fn test_fetch_items_with_label() {
+    }
+
+    #[test]
+    fn test_fetch_item() {
+    }
+
+    #[test]
+    fn test_create_item() {
+    }
+
+    #[test]
+    fn test_update_item() {
+    }
 }
