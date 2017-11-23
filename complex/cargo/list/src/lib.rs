@@ -57,8 +57,8 @@ impl ListManager {
     }
 
     pub fn create_label(&self, name: String, color: String) -> Option<Label> {
-        let sql = r#"INSERT INTO labels (name, color) VALUES (?1, ?2)"#;
         let db = self.store.write_connection();
+        let sql = r#"INSERT INTO labels (name, color) VALUES (?1, ?2)"#;
         db.execute(sql, &[&name, &color]).unwrap();
         self.fetch_label(&name)
     }
@@ -110,6 +110,7 @@ impl ListManager {
         let conn = self.store.read_connection();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[item_uuid], |row| {
+            println!("found row!");
             Label {
                 name: row.get(0),
                 color: row.get(1)
@@ -151,7 +152,7 @@ impl ListManager {
 
     pub fn fetch_items_with_label(&self, label: &Label) -> Vec<Item> {
         let sql = r#"SELECT uuid, name, created_at, due_date, completion_date
-                     FROM items LEFT JOIN item_labels on items.uuid=item_label.item_uuid
+                     FROM items JOIN item_labels on items.uuid=item_label.item_uuid
                      WHERE item_labels.label_name=?"#;
         let conn = self.store.read_connection();
         let mut stmt = conn.prepare(sql).unwrap();
@@ -205,9 +206,9 @@ impl ListManager {
         conn.execute(item_sql, &[&item_uuid, &item.name, &item.due_date, &item.completion_date]).unwrap();
 
         let item_label_sql = r#"INSERT INTO item_labels (item_uuid, label_name) VALUES (?, ?)"#;
-        let _ = item.labels.iter().map(|label| {
+        for label in item.labels.iter() {
             conn.execute(&item_label_sql, &[&item_uuid, &label.name]).unwrap();
-        });
+        }
         self.fetch_item(&item_uuid)
     }
 
@@ -271,13 +272,27 @@ pub unsafe extern "C" fn list_manager_create_label(manager: *const Arc<ListManag
 
 #[cfg(test)]
 mod test {
-    use super::Store;
-    use super::ListManager;
+    use super::{
+        Store,
+        ListManager,
+        Label,
+        Item
+    };
+
     use std::sync::Arc;
 
-    fn list_manager() -> ListManager {=
-        let store = Arc::new(Store::new(None));
+    fn list_manager() -> ListManager {
+        let store = Arc::new(Store::new(Some("sql_test".to_string())));
         ListManager::new(store)
+    }
+
+    fn clean_up(store: &Store) {
+        let conn = store.write_connection();
+        let tables = [&"items", &"labels", &"item_labels"];
+        for &table in tables.iter() {
+            let sql = format!("DROP TABLE {}", table);
+            let _ = conn.execute(&sql, &[]);
+        }
     }
 
     #[test]
@@ -298,18 +313,80 @@ mod test {
                 _ => assert!(false),
             }
         }
+
+        clean_up(&manager.store);
     }
 
     #[test]
     fn test_create_label() {
+        let manager = list_manager();
+        let l = Label {
+            name: "test".to_string(),
+            color: "#000000".to_string()
+        };
+        let label = manager.create_label(l.name.clone(), l.color.clone());
+        assert_eq!(label, Some(l));
+        clean_up(&manager.store);
     }
 
     #[test]
     fn test_fetch_label() {
+        let manager = list_manager();
+        let created_label = manager.create_label("test".to_string(), "#000000".to_string()).unwrap();
+        let fetched_label = manager.fetch_label(&created_label.name).unwrap();
+        assert_eq!(fetched_label, created_label);
+
+        let fetched_label = manager.fetch_label(&"doesn't exist".to_string());
+        assert_eq!(fetched_label, None);
+
+        clean_up(&manager.store);
     }
 
     #[test]
     fn test_fetch_labels() {
+        let manager = list_manager();
+
+        let labels = ["label1".to_string(), "label2".to_string(), "label3".to_string()];
+        for label in labels.iter() {
+            manager.create_label(label.clone(), "#000000".to_string());
+        }
+        let fetched_labels = manager.fetch_labels();
+        assert_eq!(fetched_labels.len(), labels.len());
+        for label in fetched_labels.iter() {
+            assert!(labels.contains(&label.name));
+        }
+
+        clean_up(&manager.store);
+    }
+
+    #[test]
+    fn test_create_item() {
+        let manager = list_manager();
+        let l = Label {
+            name: "test".to_string(),
+            color: "#000000".to_string()
+        };
+        let label = manager.create_label(l.name.clone(), l.color.clone()).unwrap();
+
+        let i = Item {
+            uuid: "".to_string(),
+            name: "test item".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label]
+        };
+
+        let item = manager.create_item(&i).expect("expected an item");
+        assert!(item.uuid.len() > 0);
+        assert_eq!(item.name, i.name);
+        assert_eq!(item.due_date, i.due_date);
+        assert_eq!(item.completion_date, i.completion_date);
+        assert_eq!(item.labels, i.labels);
+        clean_up(&manager.store);
+    }
+
+    #[test]
+    fn test_fetch_item() {
     }
 
     #[test]
@@ -318,14 +395,6 @@ mod test {
 
     #[test]
     fn test_fetch_items_with_label() {
-    }
-
-    #[test]
-    fn test_fetch_item() {
-    }
-
-    #[test]
-    fn test_create_item() {
     }
 
     #[test]

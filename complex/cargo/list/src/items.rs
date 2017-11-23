@@ -23,7 +23,7 @@ use ffi_utils::strings::{
 };
 use labels::Label;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Item {
     pub uuid: String,
     pub name: String,

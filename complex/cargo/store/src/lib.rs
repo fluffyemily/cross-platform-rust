@@ -43,7 +43,7 @@ impl Store {
     pub fn new(uri: Option<String>) -> Self {
         let c = match &uri {
             &Some(ref u) => Connection::open(u.clone()).unwrap(),
-            &None => Connection::open_in_memory_with_flags(rusqlite::SQLITE_OPEN_URI | rusqlite::SQLITE_OPEN_READ_WRITE).unwrap(),
+            &None => Connection::open_in_memory().unwrap(),
         };
         Store {
             conn: Mutex::new(Arc::new(c)),
