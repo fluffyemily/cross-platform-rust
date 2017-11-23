@@ -106,7 +106,7 @@ impl ListManager {
 
     pub fn fetch_labels_for_item(&self, item_uuid: &String) -> Vec<Label> {
         let sql = r#"SELECT name, color
-                     FROM labels LEFT JOIN item_labels on item_labels.item_uuid=?"#;
+                     FROM labels JOIN item_labels on item_labels.item_uuid=?"#;
         let conn = self.store.read_connection();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[item_uuid], |row| {
