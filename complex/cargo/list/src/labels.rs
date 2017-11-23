@@ -17,7 +17,7 @@ use ffi_utils::strings::{
     c_char_to_string,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Label {
     pub name: String,
     pub color: String

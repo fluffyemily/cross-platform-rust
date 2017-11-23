@@ -213,6 +213,22 @@ impl ListManager {
         let sql = r#"UPDATE items SET name=?, due_date=?, completion_date=? WHERE uuid=?"#;
         let conn = self.store.write_connection();
         let _ = conn.execute(sql, &[&item.name, &item.due_date, &item.completion_date, &item.uuid]);
+
+        let existing_labels = self.fetch_labels_for_item(&(item.uuid));
+        let item_label_insert_sql = r#"INSERT INTO item_labels (item_uuid, label_name) VALUES (?, ?)"#;
+        let _ = item.labels.iter().map(|label| {
+            if !existing_labels.contains(label) {
+                // add label to item
+                conn.execute(&item_label_insert_sql, &[&item.uuid, &label.name]).unwrap();
+            }
+        });
+        let item_label_delete_sql = r#"DELETE FROM item_labels WHERE item_uuid=? AND label_name=?"#;
+        let _ = existing_labels.iter().map(|label| {
+            if !item.labels.contains(label) {
+                // delete label from item
+                conn.execute(&item_label_delete_sql, &[&item.uuid, &label.name]).unwrap();
+            }
+        });
     }
 }
 
