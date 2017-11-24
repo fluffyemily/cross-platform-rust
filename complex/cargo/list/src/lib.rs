@@ -140,7 +140,7 @@ impl ListManager {
         let sql = r#"CREATE TABLE IF NOT EXISTS item_labels (
                 item_uuid TEXT NOT NULL,
                 label_name TEXT NOT NULL,
-                PRIMARY_KEY(item_uuid, label_name)
+                PRIMARY KEY(item_uuid, label_name)
             )"#;
         let db = self.store.write_connection();
         db.execute(sql, &[]).unwrap();
