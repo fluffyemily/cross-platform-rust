@@ -189,6 +189,7 @@ name = "toodle"
 version = "0.1.0"
 dependencies = [
  "ffi-utils 0.1.0",
+ "jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "list 0.1.0",
  "store 0.1.0",
 ]
