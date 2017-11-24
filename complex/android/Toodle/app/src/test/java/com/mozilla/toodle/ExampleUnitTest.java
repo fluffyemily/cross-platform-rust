@@ -1,4 +1,4 @@
-package com.mozilla.greetings;
+package com.mozilla.toodle;
 
 import org.junit.Test;
 
