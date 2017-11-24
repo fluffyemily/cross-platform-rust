@@ -7,7 +7,7 @@ public class ToodleActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_greetings);
+        setContentView(R.layout.activity_toodle);
     }
 
     @Override
