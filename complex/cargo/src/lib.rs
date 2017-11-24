@@ -20,6 +20,7 @@ use std::sync::{
 };
 
 use ffi_utils::strings::c_char_to_string;
+use ffi_utils::android::log;
 use list::ListManager;
 use store::Store;
 
@@ -65,15 +66,12 @@ pub mod android {
     use self::jni::JNIEnv;
     use self::jni::objects::{JClass, JString};
     use self::jni::sys::{jlong};
-    use ffi_utils::android::log;
 
     #[no_mangle]
     pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_newToodle(env: JNIEnv, _: JClass, db_path: JString) -> jlong {
-        log("newToodle!");
         let db_path_uri: String = env.get_string(db_path).expect("Couldn't get db path").into();
         log(&db_path_uri);
         let toodle: Toodle = Toodle::new(db_path_uri);
-        log("made a toodle");
         Box::into_raw(Box::new(toodle)) as jlong
     }
 
