@@ -4,7 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class GreetingsActivity extends AppCompatActivity {
+public class ToodleActivity extends AppCompatActivity {
 
     static {
         System.loadLibrary("greetings");
@@ -15,7 +15,7 @@ public class GreetingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_greetings);
 
-        RustGreetings g = new RustGreetings();
+        RustToodle g = new RustToodle();
         String r = g.sayHello("world");
         ((TextView)findViewById(R.id.greetingField)).setText(r);
     }

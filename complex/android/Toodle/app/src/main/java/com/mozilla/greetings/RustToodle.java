@@ -4,7 +4,7 @@ package com.mozilla.greetings;
  * Created by emilytoop on 01/09/2017.
  */
 
-public class RustGreetings {
+public class RustToodle {
 
     private static native String greeting(final String pattern);
 
