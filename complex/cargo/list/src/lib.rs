@@ -26,6 +26,7 @@ pub mod items;
 
 use labels::Label;
 use ffi_utils::strings::c_char_to_string;
+use ffi_utils::android::log;
 use items::Item;
 use store::Store;
 
@@ -140,7 +141,7 @@ impl ListManager {
         let sql = r#"CREATE TABLE IF NOT EXISTS item_labels (
                 item_uuid TEXT NOT NULL,
                 label_name TEXT NOT NULL,
-                PRIMARY_KEY(item_uuid, label_name)
+                PRIMARY KEY(item_uuid, label_name)
             )"#;
         let db = self.store.write_connection();
         db.execute(sql, &[]).unwrap();
