@@ -9,4 +9,16 @@ public class ToodleActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_greetings);
     }
+
+    @Override
+    protected void onResume() {
+        RustToodle.getInstance(this).resume();
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        RustToodle.getInstance(this).pause();
+        super.onPause();
+    }
 }
