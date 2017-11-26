@@ -15,7 +15,7 @@ public class ToodleActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_toodle);
 
-        listRecyclerView = findViewById(R.id.list_recycler_view);
+        listRecyclerView = findViewById(R.id.listItems);
 
         layoutManager = new LinearLayoutManager(this);
         listRecyclerView.setLayoutManager(layoutManager);

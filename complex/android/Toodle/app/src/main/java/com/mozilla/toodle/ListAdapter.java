@@ -33,7 +33,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        ((TextView) holder.itemView.findViewById(R.id.item_title)).setText(dataset[position]);
+        ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(dataset[position]);
     }
 
     @Override
