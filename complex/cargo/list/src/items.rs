@@ -25,6 +25,7 @@ use labels::Label;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
+    pub id: Option<i64>,
     pub uuid: String,
     pub name: String,
     pub due_date: Option<Timespec>,
@@ -41,6 +42,7 @@ impl Drop for Item {
 #[no_mangle]
 pub extern "C" fn item_new() -> *mut Item {
     let item = Item{
+        id: None,
         uuid: "".to_string(),
         name: "".to_string(),
         due_date: None,

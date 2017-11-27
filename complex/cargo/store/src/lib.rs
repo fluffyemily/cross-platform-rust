@@ -67,15 +67,9 @@ pub trait ToTypedValue {
     fn to_typed_value(&self) -> Result<TypedValue, ()>;
 }
 
-impl ToTypedValue for String {
+impl<'a> ToTypedValue for &'a String {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::String(Rc::new(self.to_owned())))
-    }
-}
-
-impl ToTypedValue for str {
-    fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::String(Rc::new(self.to_owned())))
+        Ok(TypedValue::String(Rc::new((*self).to_owned())))
     }
 }
 
@@ -83,40 +77,40 @@ pub struct Entity {
     id: Entid
 }
 
-impl ToTypedValue for Entity {
+impl<'a> ToTypedValue for &'a Entity {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
         Ok(TypedValue::Ref(self.id.clone()))
     }
 }
 
-impl ToTypedValue for bool {
+impl<'a> ToTypedValue for &'a bool {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Boolean(self.clone()))
+        Ok(TypedValue::Boolean((*self).to_owned()))
     }
 }
 
-impl ToTypedValue for i64 {
+impl<'a> ToTypedValue for &'a i64 {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Long(self.clone()))
+        Ok(TypedValue::Long((*self).to_owned()))
     }
 }
 
-impl ToTypedValue for f64 {
+impl<'a> ToTypedValue for &'a f64 {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Double(OrderedFloat(self.clone())))
+        Ok(TypedValue::Double(OrderedFloat((*self).to_owned())))
     }
 }
 
-impl ToTypedValue for Timespec {
+impl<'a> ToTypedValue for &'a Timespec {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
         let micro_seconds = (self.sec / 1000000) + i64::from((self.nsec * 1000));
         Ok(TypedValue::Instant(DateTime::<Utc>::from_micros(micro_seconds)))
     }
 }
 
-impl ToTypedValue for Uuid {
+impl<'a> ToTypedValue for &'a Uuid {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        Ok(TypedValue::Uuid(self.clone()))
+        Ok(TypedValue::Uuid((*self).to_owned()))
     }
 }
 
