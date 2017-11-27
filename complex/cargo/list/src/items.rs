@@ -21,6 +21,7 @@ use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
 };
+use ffi_utils::android::log;
 use labels::Label;
 
 #[derive(Debug, Clone)]
@@ -38,15 +39,19 @@ impl Drop for Item {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn item_new() -> *mut Item {
-    let item = Item{
+fn new_item() -> Item {
+    Item {
         uuid: "".to_string(),
         name: "".to_string(),
         due_date: None,
         completion_date: None,
         labels: vec![]
-    };
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn item_new() -> *mut Item {
+    let item = new_item();
     let boxed_item = Box::new(item);
     Box::into_raw(boxed_item)
 }
@@ -139,4 +144,45 @@ pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: siz
     let index = index as usize;
     let label = Box::new(label_list[index].clone());
     Box::into_raw(label)
+}
+
+#[cfg(target_os="android")]
+#[allow(non_snake_case)]
+pub mod android {
+    extern crate jni;
+
+    use super::*;
+    use self::jni::JNIEnv;
+    use self::jni::objects::{JClass, JString, JValue};
+    use self::jni::sys::{jlong};
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_newItem(env: JNIEnv, _: JClass) -> jlong {
+        Box::into_raw(Box::new(new_item())) as jlong
+    }
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_itemSetName(env: JNIEnv, _: JClass, item: *mut Item, name: JString) {
+        let item = &mut*item;
+        log("Got item");
+
+        // TODO line below crashes... why?
+        let new_name: String = env.get_string(name).expect("Couldn't get item name").into();
+        log("Got name");
+        log(&new_name);
+
+        item.name = new_name;
+    }
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_itemSetDueDate(env: JNIEnv, _: JClass, item: *mut Item, due_date: JValue) {
+        let item = &mut*item;
+        log("Got item");
+
+        // TODO line below crashes... why?
+        let due_date: i64 = due_date.j().expect("Could not get due date").into();
+        log("Got due date");
+
+        item.due_date = Some(Timespec::new(due_date, 0));
+    }
 }
