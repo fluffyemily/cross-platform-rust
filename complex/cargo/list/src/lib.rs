@@ -105,21 +105,12 @@ impl ListManager {
     }
 
     pub fn fetch_labels_for_item(&self, item_uuid: &String) -> Vec<Label> {
-        let sql = r#"SELECT count(label_name)
-                     FROM item_labels WHERE item_uuid=?"#;
-        let conn = self.store.conn.clone();
-        let mut stmt = conn.prepare(sql).unwrap();
-        let _ = stmt.query_map(&[item_uuid], |row| {
-            let count: i64 = row.get(0);
-            println!("there are {:?} labels for item {:?}", count, item_uuid);
-        });
         let sql = r#"SELECT name, color
                      FROM labels JOIN item_labels on item_labels.label_name=labels.name
                      WHERE item_labels.item_uuid=?"#;
-        // let conn = self.store.conn.clone();
+        let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[item_uuid], |row| {
-            println!("found row!");
             Label {
                 name: row.get(0),
                 color: row.get(1)
@@ -160,8 +151,8 @@ impl ListManager {
     }
 
     pub fn fetch_items_with_label(&self, label: &Label) -> Vec<Item> {
-        let sql = r#"SELECT uuid, name, created_at, due_date, completion_date
-                     FROM items JOIN item_labels on items.uuid=item_label.item_uuid
+        let sql = r#"SELECT uuid, name, due_date, completion_date
+                     FROM items JOIN item_labels on items.uuid=item_labels.item_uuid
                      WHERE item_labels.label_name=?"#;
         let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
@@ -228,19 +219,19 @@ impl ListManager {
 
         let existing_labels = self.fetch_labels_for_item(&(item.uuid));
         let item_label_insert_sql = r#"INSERT INTO item_labels (item_uuid, label_name) VALUES (?, ?)"#;
-        let _ = item.labels.iter().map(|label| {
+        for label in item.labels.iter() {
             if !existing_labels.contains(label) {
                 // add label to item
                 conn.execute(&item_label_insert_sql, &[&item.uuid, &label.name]).unwrap();
             }
-        });
+        }
         let item_label_delete_sql = r#"DELETE FROM item_labels WHERE item_uuid=? AND label_name=?"#;
-        let _ = existing_labels.iter().map(|label| {
+        for label in existing_labels.iter() {
             if !item.labels.contains(label) {
                 // delete label from item
                 conn.execute(&item_label_delete_sql, &[&item.uuid, &label.name]).unwrap();
             }
-        });
+        }
     }
 }
 
@@ -453,17 +444,213 @@ mod test {
 
     #[test]
     fn test_fetch_item() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let i = Item {
+            uuid: "".to_string(),
+            name: "test item".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label]
+        };
+
+        let created_item = manager.create_item(&i).expect("expected an item");
+        let fetched_item = manager.fetch_item(&created_item.uuid).expect("expected an item");
+        assert_eq!(fetched_item, created_item);
+
+        let fetched_item = manager.fetch_item(&"doesn't exist".to_string());
+        assert_eq!(fetched_item, None);
     }
 
     #[test]
     fn test_fetch_labels_for_item() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+        let label3 = manager.create_label("label3".to_string(), "#000000".to_string()).unwrap();
+
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label, label2, label3]
+        };
+
+        let created_item = manager.create_item(&item1).expect("expected an item");
+
+        let fetched_labels = manager.fetch_labels_for_item(&created_item.uuid);
+        assert_eq!(fetched_labels, created_item.labels);
     }
 
     #[test]
     fn test_fetch_items_with_label() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label.clone()]
+        };
+        let item2 = Item {
+            uuid: "".to_string(),
+            name: "test item 2".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label.clone()]
+        };
+        let item3 = Item {
+            uuid: "".to_string(),
+            name: "test item 3".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label.clone(), label2.clone()]
+        };
+
+        let item4 = Item {
+            uuid: "".to_string(),
+            name: "test item 4".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label2.clone()]
+        };
+
+        let created_item1 = manager.create_item(&item1).expect("expected an item 1");
+        let created_item2 = manager.create_item(&item2).expect("expected an item 2");
+        let created_item3 = manager.create_item(&item3).expect("expected an item 3");
+        let created_item4 = manager.create_item(&item4).expect("expected an item 4");
+
+        let fetched_label1_items = manager.fetch_items_with_label(&label);
+        assert_eq!(fetched_label1_items, vec![created_item1, created_item2, created_item3.clone()]);
+        let fetched_label2_items = manager.fetch_items_with_label(&label2);
+        assert_eq!(fetched_label2_items, vec![created_item3, created_item4]);
     }
 
     #[test]
-    fn test_update_item() {
+    fn test_update_item_add_label() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+        let label3 = manager.create_label("label3".to_string(), "#000000".to_string()).unwrap();
+
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label, label2]
+        };
+
+        let mut created_item = manager.create_item(&item1).expect("expected an item");
+        created_item.labels.push(label3);
+
+        manager.update_item(&created_item);
+
+        let fetched_item = manager.fetch_item(&created_item.uuid).expect("expected an item");
+        assert_eq!(fetched_item, created_item);
+    }
+
+    #[test]
+    fn test_update_item_remove_label() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+        let label3 = manager.create_label("label3".to_string(), "#000000".to_string()).unwrap();
+
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label, label2, label3]
+        };
+
+        let mut created_item = manager.create_item(&item1).expect("expected an item");
+        created_item.labels.remove(2);
+        
+        manager.update_item(&created_item);
+
+        let fetched_item = manager.fetch_item(&created_item.uuid).expect("expected an item");
+        assert_eq!(fetched_item, created_item);
+    }
+
+    #[test]
+    fn test_update_item_add_due_date() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+        let label3 = manager.create_label("label3".to_string(), "#000000".to_string()).unwrap();
+
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label, label2, label3]
+        };
+
+        let mut created_item = manager.create_item(&item1).expect("expected an item");
+        created_item.due_date = Some(now_utc().to_timespec());
+
+        manager.update_item(&created_item);
+
+        let fetched_item = manager.fetch_item(&created_item.uuid).expect("expected an item");
+        let due_date = fetched_item.due_date.expect("expected a due date");
+        assert_eq!(due_date.sec, created_item.due_date.unwrap().sec);
+    }
+
+    #[test]
+    fn test_update_item_change_name() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+        let label3 = manager.create_label("label3".to_string(), "#000000".to_string()).unwrap();
+
+        let date = now_utc().to_timespec();
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: Some(date),
+            completion_date: None,
+            labels: vec![label, label2, label3]
+        };
+
+        let mut created_item = manager.create_item(&item1).expect("expected an item");
+        created_item.name = "new name".to_string();
+
+        manager.update_item(&created_item);
+
+        let fetched_item = manager.fetch_item(&created_item.uuid).expect("expected an item");
+        assert_eq!(fetched_item.name, created_item.name);
+    }
+
+    #[test]
+    fn test_update_item_complete_item() {
+        let manager = list_manager();
+        let label = manager.create_label("label1".to_string(), "#000000".to_string()).unwrap();
+        let label2 = manager.create_label("label2".to_string(), "#000000".to_string()).unwrap();
+        let label3 = manager.create_label("label3".to_string(), "#000000".to_string()).unwrap();
+
+        let date = now_utc().to_timespec();
+        let item1 = Item {
+            uuid: "".to_string(),
+            name: "test item 1".to_string(),
+            due_date: None,
+            completion_date: None,
+            labels: vec![label, label2, label3]
+        };
+
+        let mut created_item = manager.create_item(&item1).expect("expected an item");
+        created_item.completion_date = Some(date);
+
+        manager.update_item(&created_item);
+
+        let fetched_item = manager.fetch_item(&created_item.uuid).expect("expected an item");
+        let completion_date = fetched_item.completion_date.expect("expected a completion_date");
+        assert_eq!(completion_date.sec, date.sec);
     }
 }
