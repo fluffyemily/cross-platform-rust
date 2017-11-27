@@ -263,3 +263,21 @@ pub unsafe extern "C" fn list_manager_create_label(manager: *const Arc<ListManag
     let label = Box::new(manager.create_label(name, color).unwrap());
     Box::into_raw(label)
 }
+
+#[cfg(target_os="android")]
+#[allow(non_snake_case)]
+pub mod android {
+    extern crate jni;
+
+    use super::*;
+    use self::jni::JNIEnv;
+    use self::jni::objects::{JClass, JString};
+    use self::jni::sys::{jlong};
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_itemCreate(env: JNIEnv, _: JClass, list_manager: *mut ListManager, item: *mut Item) {
+        let item = &mut*item;
+        let list_manager = &mut*list_manager;
+        list_manager.create_item(item);
+    }
+}

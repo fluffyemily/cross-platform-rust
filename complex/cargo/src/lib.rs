@@ -79,4 +79,10 @@ pub mod android {
     pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_toodleDestroy(_: JNIEnv, _: JClass, toodle: *mut Toodle) {
         let _ = &*toodle;
     }
+
+    #[no_mangle]
+    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_listManager(_: JNIEnv, _: JClass, toodle: *mut Toodle) -> jlong {
+        let toodle = &*toodle;
+        Box::into_raw(Box::new(toodle.list.clone())) as jlong
+    }
 }

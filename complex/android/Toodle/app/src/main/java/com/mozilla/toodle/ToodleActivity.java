@@ -1,9 +1,12 @@
 package com.mozilla.toodle;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 public class ToodleActivity extends Activity {
     private RecyclerView listRecyclerView;
@@ -23,17 +26,24 @@ public class ToodleActivity extends Activity {
         listAdapter = new ListAdapter(new String[] {"One", "Two"});
         listRecyclerView.setAdapter(listAdapter);
 
+        final FloatingActionButton newItemBtn = findViewById(R.id.newItem);
+        newItemBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ToodleActivity.this, NewItemActivity.class));
+            }
+        });
     }
 
     @Override
     protected void onResume() {
-        RustToodle.getInstance(this).resume();
+        RustToodle.getInstance(this).refresh();
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        RustToodle.getInstance(this).pause();
+        RustToodle.getInstance(this).destroy();
         super.onPause();
     }
 }

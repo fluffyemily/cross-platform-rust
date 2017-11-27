@@ -14,6 +14,7 @@
         tools:listitem="@layout/item" />
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/newItem"
         android:src="@drawable/ic_plus_white_24dp"
         app:fabSize="normal"
         app:backgroundTint="#E91E63"
