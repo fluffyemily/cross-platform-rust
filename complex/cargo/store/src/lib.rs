@@ -8,39 +8,122 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+#[macro_use] extern crate error_chain;
+
 extern crate mentat;
 extern crate edn;
 extern crate mentat_query;
 extern crate mentat_core;
 extern crate mentat_db;
+extern crate ordered_float;
 extern crate rusqlite;
+extern crate time;
+
 extern crate ffi_utils;
 
+use std::any::{Any, TypeId};
 use std::fmt;
 use std::os::raw::{
     c_char
 };
+use std::rc::Rc;
 use std::sync::{
     Arc,
 };
 
+use edn::{
+    DateTime,
+    FromMicros,
+    ToMicros,
+    Utc,
+    Uuid
+};
 use mentat::{
     new_connection,
 };
 use mentat::conn::Conn;
+use mentat_core::{
+    Entid,
+    TypedValue,
+};
 use mentat_db::types::TxReport;
-use mentat::query::QueryResults;
+use mentat::query::{
+    QueryInputs,
+    QueryResults,
+    Variable,
+};
+use ordered_float::OrderedFloat;
 use rusqlite::{
     Connection
 };
+use time::Timespec;
+
+pub mod errors;
 
 use ffi_utils::strings::c_char_to_string;
+use errors as store_errors;
 
-#[derive(Debug)]
+pub trait ToTypedValue {
+    fn to_typed_value(&self) -> Result<TypedValue, ()>;
+}
+
+impl ToTypedValue for String {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::String(Rc::new(self.to_owned())))
+    }
+}
+
+impl ToTypedValue for str {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::String(Rc::new(self.to_owned())))
+    }
+}
+
+pub struct Entity {
+    id: Entid
+}
+
+impl ToTypedValue for Entity {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::Ref(self.id.clone()))
+    }
+}
+
+impl ToTypedValue for bool {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::Boolean(self.clone()))
+    }
+}
+
+impl ToTypedValue for i64 {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::Long(self.clone()))
+    }
+}
+
+impl ToTypedValue for f64 {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::Double(OrderedFloat(self.clone())))
+    }
+}
+
+impl ToTypedValue for Timespec {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        let micro_seconds = (self.sec / 1000000) + i64::from((self.nsec * 1000));
+        Ok(TypedValue::Instant(DateTime::<Utc>::from_micros(micro_seconds)))
+    }
+}
+
+impl ToTypedValue for Uuid {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::Uuid(self.clone()))
+    }
+}
+
 #[repr(C)]
 /// Store containing a SQLite connection
 pub struct Store {
-    handle: Arc<Connection>,
+    handle: Connection,
     conn: Conn,
     uri: String,
 }
@@ -58,34 +141,40 @@ impl fmt::Debug for Store {
 }
 
 impl Store {
-    pub fn new<T>(uri: T) -> Self
+    pub fn new<T>(uri: T) -> Result<Self, store_errors::Error>
     where T: Into<Option<String>> {
-        let uri_string = match &(uri.into()) {
-            &Some(ref u) => u,
-            &None => "",
-        };
+        let uri_string = uri.into().unwrap_or(String::new());
         let mut h = try!(new_connection(&uri_string));
         let c = try!(Conn::connect(&mut h));
         Ok(Store {
-            handle: Arc::new(h),
+            handle: h,
             conn:c,
             uri: uri_string,
         })
     }
 
-    pub fn open(&mut self, uri: String) -> Result<(), mentat::errors::Error> {
-        self.handle = try!(new_connection(&uri));
+    pub fn open<T>(&mut self, uri: T) -> Result<(), store_errors::Error>
+    where T: Into<Option<String>> {
+        let uri_string = uri.into().unwrap_or(String::new());
+        self.handle = try!(new_connection(&uri_string));
         self.conn = try!(Conn::connect(&mut self.handle));
-        self.uri = uri;
+        self.uri = uri_string;
         Ok(())
     }
 
-    pub fn query(&self, query: String) -> Result<QueryResults, mentat::errors::Error> {
-        Ok(self.conn.q_once(&self.handle, &query, None)?)
+    pub fn query<T>(&self, query: &str, inputs: &[&(&String, &T)]) ->  Result<QueryResults, store_errors::Error>
+        where T: ToTypedValue {
+        let mut ee = vec![];
+        for &&(ref arg, ref val) in inputs.iter() {
+            ee.push((Variable::from_valid_name(&arg), val.to_typed_value().ok().unwrap()));
+        }
+        let i = QueryInputs::with_value_sequence(ee);
+        // convert inputs to QueryInputs
+        Ok(self.conn.q_once(&self.handle, query, i)?)
     }
 
-    pub fn transact(&mut self, transaction: String) -> Result<TxReport, mentat::errors::Error> {
-        Ok(self.conn.transact(&mut self.handle, &transaction)?)
+    pub fn transact(&mut self, transaction: &str) -> Result<TxReport, store_errors::Error> {
+        Ok(self.conn.transact(&mut self.handle, transaction)?)
     }
 
     pub fn fetch_schema(&self) -> edn::Value {
