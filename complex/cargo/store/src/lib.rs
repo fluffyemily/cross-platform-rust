@@ -16,7 +16,6 @@ use std::os::raw::{
 };
 use std::sync::{
     Arc,
-    Mutex
 };
 
 use rusqlite::{
@@ -29,7 +28,7 @@ use ffi_utils::strings::c_char_to_string;
 #[repr(C)]
 /// Store containing a SQLite connection
 pub struct Store {
-    conn: Mutex<Arc<Connection>>,
+    pub conn: Arc<Connection>,
     uri: Option<String>,
 }
 
@@ -46,21 +45,9 @@ impl Store {
             &None => Connection::open_in_memory().unwrap(),
         };
         Store {
-            conn: Mutex::new(Arc::new(c)),
+            conn: Arc::new(c),
             uri: uri,
         }
-    }
-
-    pub fn write_connection(&self) -> Arc<Connection> {
-        self.conn.lock().unwrap().clone()
-    }
-
-    pub fn read_connection(&self) -> Arc<Connection> {
-        let c = match &self.uri {
-            &Some(ref u) => Connection::open_with_flags(u.clone(), rusqlite::SQLITE_OPEN_READ_ONLY).unwrap(),
-            &None => Connection::open_in_memory_with_flags(rusqlite::SQLITE_OPEN_READ_ONLY).unwrap()
-        };
-        Arc::new(c)
     }
 }
 

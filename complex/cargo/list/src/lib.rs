@@ -52,12 +52,12 @@ impl ListManager {
                 name TEXT NOT NULL PRIMARY KEY,
                 color TEXT NOT NULL
             )"#;
-        let db = self.store.write_connection();
+        let db = self.store.conn.clone();
         db.execute(sql, &[]).unwrap();
     }
 
     pub fn create_label(&self, name: String, color: String) -> Option<Label> {
-        let db = self.store.write_connection();
+        let db = self.store.conn.clone();
         let sql = r#"INSERT INTO labels (name, color) VALUES (?1, ?2)"#;
         db.execute(sql, &[&name, &color]).unwrap();
         self.fetch_label(&name)
@@ -66,7 +66,7 @@ impl ListManager {
     pub fn fetch_label(&self, name: &String) -> Option<Label> {
         let sql = r#"SELECT name, color FROM labels WHERE name=?"#;
 
-        let conn = self.store.read_connection();
+        let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[name], |row| {
             Label {
@@ -86,7 +86,7 @@ impl ListManager {
     pub fn fetch_labels(&self) -> Vec<Label> {
         let sql = r#"SELECT name, color
                      FROM labels"#;
-        let conn = self.store.read_connection();
+        let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[], |row| {
             Label {
@@ -105,9 +105,18 @@ impl ListManager {
     }
 
     pub fn fetch_labels_for_item(&self, item_uuid: &String) -> Vec<Label> {
+        let sql = r#"SELECT count(label_name)
+                     FROM item_labels WHERE item_uuid=?"#;
+        let conn = self.store.conn.clone();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let _ = stmt.query_map(&[item_uuid], |row| {
+            let count: i64 = row.get(0);
+            println!("there are {:?} labels for item {:?}", count, item_uuid);
+        });
         let sql = r#"SELECT name, color
-                     FROM labels JOIN item_labels on item_labels.item_uuid=?"#;
-        let conn = self.store.read_connection();
+                     FROM labels JOIN item_labels on item_labels.label_name=labels.name
+                     WHERE item_labels.item_uuid=?"#;
+        // let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[item_uuid], |row| {
             println!("found row!");
@@ -133,7 +142,7 @@ impl ListManager {
                 due_date DATETIME,
                 completion_date DATETIME
             )"#;
-        let db = self.store.write_connection();
+        let db = self.store.conn.clone();
         db.execute(sql, &[]).unwrap();
     }
 
@@ -143,7 +152,7 @@ impl ListManager {
                 label_name TEXT NOT NULL,
                 PRIMARY KEY(item_uuid, label_name)
             )"#;
-        let db = self.store.write_connection();
+        let db = self.store.conn.clone();
         let r = db.execute(sql, &[]);
         if r.is_err() {
             println!("failed to create item_labels table {:?}", r.err());
@@ -154,7 +163,7 @@ impl ListManager {
         let sql = r#"SELECT uuid, name, created_at, due_date, completion_date
                      FROM items JOIN item_labels on items.uuid=item_label.item_uuid
                      WHERE item_labels.label_name=?"#;
-        let conn = self.store.read_connection();
+        let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[&label.name], |row| {
             let uuid: String = row.get(0);
@@ -179,7 +188,7 @@ impl ListManager {
     pub fn fetch_item(&self, uuid: &String) -> Option<Item> {
         let sql = r#"SELECT uuid, name, due_date, completion_date FROM items WHERE uuid=?"#;
 
-        let conn = self.store.read_connection();
+        let conn = self.store.conn.clone();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[uuid], |row| {
             Item {
@@ -201,7 +210,7 @@ impl ListManager {
 
     pub fn create_item(&self, item: &Item) -> Option<Item> {
         let item_sql = r#"INSERT INTO items (uuid, name, due_date, completion_date) VALUES (?, ?, ?, ?)"#;
-        let conn = self.store.write_connection();
+        let conn = self.store.conn.clone();
         let item_uuid = Uuid::new_v4().simple().to_string();
         conn.execute(item_sql, &[&item_uuid, &item.name, &item.due_date, &item.completion_date]).unwrap();
 
@@ -214,7 +223,7 @@ impl ListManager {
 
     pub fn update_item(&self, item: &Item) {
         let sql = r#"UPDATE items SET name=?, due_date=?, completion_date=? WHERE uuid=?"#;
-        let conn = self.store.write_connection();
+        let conn = self.store.conn.clone();
         let _ = conn.execute(sql, &[&item.name, &item.due_date, &item.completion_date, &item.uuid]);
 
         let existing_labels = self.fetch_labels_for_item(&(item.uuid));
@@ -267,9 +276,6 @@ pub unsafe extern "C" fn list_manager_create_label(manager: *const Arc<ListManag
 }
 
 
-
-
-
 #[cfg(test)]
 mod test {
     use super::{
@@ -281,25 +287,18 @@ mod test {
 
     use std::sync::Arc;
 
-    fn list_manager() -> ListManager {
-        let store = Arc::new(Store::new(Some("sql_test".to_string())));
-        ListManager::new(store)
-    }
+    use time::now_utc;
 
-    fn clean_up(store: &Store) {
-        let conn = store.write_connection();
-        let tables = [&"items", &"labels", &"item_labels"];
-        for &table in tables.iter() {
-            let sql = format!("DROP TABLE {}", table);
-            let _ = conn.execute(&sql, &[]);
-        }
+    fn list_manager() -> ListManager {
+        let store = Arc::new(Store::new(None));
+        ListManager::new(store)
     }
 
     #[test]
     fn test_new_list_manager() {
         let manager = list_manager();
         let sql = r#"SELECT count(name) FROM sqlite_master WHERE type='table' AND name=?"#;
-        let conn = manager.store.write_connection();
+        let conn = manager.store.conn.clone();
         // test that items table has been created
         let mut stmt = conn.prepare(sql).unwrap();
         let tables = [&"items", &"labels", &"item_labels"];
@@ -313,8 +312,6 @@ mod test {
                 _ => assert!(false),
             }
         }
-
-        clean_up(&manager.store);
     }
 
     #[test]
@@ -326,7 +323,6 @@ mod test {
         };
         let label = manager.create_label(l.name.clone(), l.color.clone());
         assert_eq!(label, Some(l));
-        clean_up(&manager.store);
     }
 
     #[test]
@@ -338,8 +334,6 @@ mod test {
 
         let fetched_label = manager.fetch_label(&"doesn't exist".to_string());
         assert_eq!(fetched_label, None);
-
-        clean_up(&manager.store);
     }
 
     #[test]
@@ -355,34 +349,106 @@ mod test {
         for label in fetched_labels.iter() {
             assert!(labels.contains(&label.name));
         }
-
-        clean_up(&manager.store);
     }
 
     #[test]
     fn test_create_item() {
         let manager = list_manager();
         let l = Label {
-            name: "test".to_string(),
+            name: "label1".to_string(),
             color: "#000000".to_string()
         };
         let label = manager.create_label(l.name.clone(), l.color.clone()).unwrap();
 
+        let l2 = Label {
+            name: "label2".to_string(),
+            color: "#000000".to_string()
+        };
+        let label2 = manager.create_label(l2.name.clone(), l2.color.clone()).unwrap();
+
+        let date = now_utc().to_timespec();
+        let i = Item {
+            uuid: "".to_string(),
+            name: "test item".to_string(),
+            due_date: Some(date.clone()),
+            completion_date: Some(date.clone()),
+            labels: vec![label, label2]
+        };
+
+        let item = manager.create_item(&i).expect("expected an item");
+        assert!(item.uuid.len() > 0);
+        assert_eq!(item.name, i.name);
+        let due_date = item.due_date.expect("expecting a due date");
+        assert_eq!(due_date.sec, date.sec);
+        let completion_date = item.completion_date.expect("expecting a completion date");
+        assert_eq!(completion_date.sec, date.sec);
+        assert_eq!(item.labels, i.labels);
+    }
+
+    #[test]
+    fn test_create_item_no_due_date() {
+        let manager = list_manager();
+        let l = Label {
+            name: "label1".to_string(),
+            color: "#000000".to_string()
+        };
+        let label = manager.create_label(l.name.clone(), l.color.clone()).unwrap();
+
+        let l2 = Label {
+            name: "label2".to_string(),
+            color: "#000000".to_string()
+        };
+        let label2 = manager.create_label(l2.name.clone(), l2.color.clone()).unwrap();
+
+        let date = now_utc().to_timespec();
         let i = Item {
             uuid: "".to_string(),
             name: "test item".to_string(),
             due_date: None,
-            completion_date: None,
-            labels: vec![label]
+            completion_date: Some(date.clone()),
+            labels: vec![label, label2]
         };
 
         let item = manager.create_item(&i).expect("expected an item");
         assert!(item.uuid.len() > 0);
         assert_eq!(item.name, i.name);
         assert_eq!(item.due_date, i.due_date);
+        let completion_date = item.completion_date.expect("expecting a completion date");
+        assert_eq!(completion_date.sec, date.sec);
+        assert_eq!(item.labels, i.labels);
+    }
+
+    #[test]
+    fn test_create_item_no_completion_date() {
+        let manager = list_manager();
+        let l = Label {
+            name: "label1".to_string(),
+            color: "#000000".to_string()
+        };
+        let label = manager.create_label(l.name.clone(), l.color.clone()).unwrap();
+
+        let l2 = Label {
+            name: "label2".to_string(),
+            color: "#000000".to_string()
+        };
+        let label2 = manager.create_label(l2.name.clone(), l2.color.clone()).unwrap();
+
+        let date = now_utc().to_timespec();
+        let i = Item {
+            uuid: "".to_string(),
+            name: "test item".to_string(),
+            due_date: Some(date.clone()),
+            completion_date: None,
+            labels: vec![label, label2]
+        };
+
+        let item = manager.create_item(&i).expect("expected an item");
+        assert!(item.uuid.len() > 0);
+        assert_eq!(item.name, i.name);
+        let due_date = item.due_date.expect("expecting a due date");
+        assert_eq!(due_date.sec, date.sec);
         assert_eq!(item.completion_date, i.completion_date);
         assert_eq!(item.labels, i.labels);
-        clean_up(&manager.store);
     }
 
     #[test]
