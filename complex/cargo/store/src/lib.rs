@@ -8,9 +8,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+extern crate mentat;
+extern crate edn;
+extern crate mentat_query;
+extern crate mentat_core;
+extern crate mentat_db;
 extern crate rusqlite;
 extern crate ffi_utils;
 
+use std::fmt;
 use std::os::raw::{
     c_char
 };
@@ -18,6 +24,12 @@ use std::sync::{
     Arc,
 };
 
+use mentat::{
+    new_connection,
+};
+use mentat::conn::Conn;
+use mentat_db::types::TxReport;
+use mentat::query::QueryResults;
 use rusqlite::{
     Connection
 };
@@ -28,8 +40,9 @@ use ffi_utils::strings::c_char_to_string;
 #[repr(C)]
 /// Store containing a SQLite connection
 pub struct Store {
-    conn: Arc<Connection>,
-    uri: Option<String>,
+    handle: Arc<Connection>,
+    conn: Conn,
+    uri: String,
 }
 
 impl Drop for Store {
@@ -38,33 +51,52 @@ impl Drop for Store {
     }
 }
 
+impl fmt::Debug for Store {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Store at {:?}", self.uri)
+    }
+}
+
 impl Store {
     pub fn new<T>(uri: T) -> Self
     where T: Into<Option<String>> {
-        let uri_string = uri.into();
-        let c = match &uri_string {
-            &Some(ref u) => Connection::open(u.clone()).expect("Expected a connection for URI"),
-            &None => Connection::open_in_memory().expect("Expected an in memory connection"),
+        let uri_string = match &(uri.into()) {
+            &Some(ref u) => u,
+            &None => "",
         };
-        Store {
-            conn: Arc::new(c),
+        let mut h = try!(new_connection(&uri_string));
+        let c = try!(Conn::connect(&mut h));
+        Ok(Store {
+            handle: Arc::new(h),
+            conn:c,
             uri: uri_string,
-        }
+        })
     }
 
-    pub fn get_conn_mut(&mut self) -> &mut Connection {
-        Arc::get_mut(&mut self.conn).unwrap()
+    pub fn open(&mut self, uri: String) -> Result<(), mentat::errors::Error> {
+        self.handle = try!(new_connection(&uri));
+        self.conn = try!(Conn::connect(&mut self.handle));
+        self.uri = uri;
+        Ok(())
     }
 
-    pub fn get_conn(&self) -> Arc<Connection> {
-        Arc::clone(&self.conn)
+    pub fn query(&self, query: String) -> Result<QueryResults, mentat::errors::Error> {
+        Ok(self.conn.q_once(&self.handle, &query, None)?)
+    }
+
+    pub fn transact(&mut self, transaction: String) -> Result<TxReport, mentat::errors::Error> {
+        Ok(self.conn.transact(&mut self.handle, &transaction)?)
+    }
+
+    pub fn fetch_schema(&self) -> edn::Value {
+        self.conn.current_schema().to_edn_value()
     }
 }
 
 #[no_mangle]
-pub extern "C" fn new_store(uri: *const c_char) -> *mut Arc<Store> {
+pub extern "C" fn new_store(uri: *const c_char) -> *mut Store {
     let uri = c_char_to_string(uri);
-    let store = Arc::new(Store::new(Some(uri)));
+    let store = Store::new(uri).expect("expected Store");
     Box::into_raw(Box::new(store))
 }
 

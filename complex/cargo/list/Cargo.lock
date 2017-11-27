@@ -1,7 +1,38 @@
 [[package]]
+name = "aho-corasick"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "memchr 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "ascii"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "backtrace"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "backtrace-sys 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dbghelp-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-demangle 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "backtrace-sys"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cc 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "bitflags"
@@ -19,9 +50,28 @@ version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "cc"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "cesu8"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "cfg-if"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "chrono"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "combine"
@@ -33,9 +83,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "dbghelp-sys"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "edn"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "itertools 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "peg 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pretty 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "either"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "enum-set"
+version = "0.0.6"
+source = "git+https://github.com/rnewman/enum-set#35f2699f121f2cd4f061a871e84022ddfdd35c36"
+
+[[package]]
 name = "error-chain"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "error-chain"
+version = "0.11.0"
+source = "git+https://github.com/rnewman/error-chain?branch=rnewman/sync#f00b30d09b3f177bc8616a9c80315e90ccd0fd74"
+dependencies = [
+ "backtrace 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "ffi-utils"
@@ -63,6 +154,14 @@ version = "0.3.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "itertools"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "either 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "jni"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -87,6 +186,11 @@ dependencies = [
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libc"
@@ -135,8 +239,292 @@ dependencies = [
 ]
 
 [[package]]
+name = "maplit"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "matches"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "memchr"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat"
+version = "0.4.0"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_db 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_parser_utils 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_algebrizer 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_parser 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_projector 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_translator 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_tx_parser 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc_version 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_core"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "enum-set 0.0.6 (git+https://github.com/rnewman/enum-set)",
+ "lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_db"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "itertools 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_tx 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_tx_parser 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tabwriter 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_parser_utils"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "itertools 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_query"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+]
+
+[[package]]
+name = "mentat_query_algebrizer"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "enum-set 0.0.6 (git+https://github.com/rnewman/enum-set)",
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+]
+
+[[package]]
+name = "mentat_query_parser"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "maplit 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_parser_utils 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+]
+
+[[package]]
+name = "mentat_query_projector"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_db 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_algebrizer 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_query_sql"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_algebrizer 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_query_translator"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_algebrizer 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_projector 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+]
+
+[[package]]
+name = "mentat_sql"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "mentat_tx"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+]
+
+[[package]]
+name = "mentat_tx_parser"
+version = "0.0.1"
+source = "git+https://github.com/mozilla/mentat.git?rev=5558820#55588209c296272ae30cc8be96c0aa179337c2ef"
+dependencies = [
+ "combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
+ "mentat_parser_utils 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_tx 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+]
+
+[[package]]
+name = "num"
+version = "0.1.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-bigint 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-complex 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-integer 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-iter 0.1.34 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-rational 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.1.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-integer 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.1.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-iter"
+version = "0.1.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-integer 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-rational"
+version = "0.1.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-bigint 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-integer 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.1.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "ordered-float"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unreachable 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "peg"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "pkg-config"
 version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "pretty"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "typed-arena 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "quote"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -154,6 +542,23 @@ version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "regex"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "aho-corasick 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "memchr 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex-syntax 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thread_local 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "utf8-ranges 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "rusqlite"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -165,12 +570,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-demangle"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "rustc-serialize"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "rustc_version"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "semver 0.1.20 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "semver"
+version = "0.1.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "store"
 version = "0.1.0"
 dependencies = [
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
  "ffi-utils 0.1.0",
  "jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mentat 0.4.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_db 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
  "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tabwriter"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "unicode-width 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "thread_local"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unreachable 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -185,6 +635,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "typed-arena"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "unicode-width"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "unreachable"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "void 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "unreachable"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "void 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "utf8-ranges"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "uuid"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -193,8 +674,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "uuid"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "vcpkg"
 version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "void"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -208,30 +699,85 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [metadata]
+"checksum aho-corasick 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "500909c4f87a9e52355b26626d890833e9e1d53ac566db76c36faa984b889699"
 "checksum ascii 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3ae7d751998c189c1d4468cf0a39bb2eae052a9c58d50ebb3b9591ee3813ad50"
+"checksum backtrace 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "8709cc7ec06f6f0ae6c2c7e12f6ed41540781f72b488d83734978295ceae182e"
+"checksum backtrace-sys 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "44585761d6161b0f57afc49482ab6bd067e4edef48c12a152c237eb0203f7661"
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
 "checksum bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4efd02e230a02e18f92fc2735f44597385ed02ad8f831e7c1c1156ee5e1ab3a5"
 "checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
+"checksum cc 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a9b13a57efd6b30ecd6598ebdb302cca617930b5470647570468a65d12ef9719"
 "checksum cesu8 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6d43a04d8753f35258c91f8ec639f792891f748a1edbd759cf1dcea3382ad83c"
+"checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
+"checksum chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7c20ebe0b2b08b0aeddba49c609fe7957ba2e33449882cb186a180bc60682fa9"
 "checksum combine 2.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1645a65a99c7c8d345761f4b75a6ffe5be3b3b27a93ee731fccc5050ba6be97c"
+"checksum dbghelp-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "97590ba53bcb8ac28279161ca943a924d1fd4a8fb3fa63302591647c4fc5b850"
+"checksum edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum either 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "740178ddf48b1a9e878e6d6509a1442a2d42fd2928aae8e7a6f8a36fb01981b3"
+"checksum enum-set 0.0.6 (git+https://github.com/rnewman/enum-set)" = "<none>"
 "checksum error-chain 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d9435d864e017c3c6afeac1654189b06cdb491cf2ff73dbf0d73b0f292f42ff8"
+"checksum error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)" = "<none>"
 "checksum fuchsia-zircon 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f6c0581a4e363262e52b87f59ee2afe3415361c6ec35e665924eb08afe8ff159"
 "checksum fuchsia-zircon-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "43f3795b4bae048dc6123a6b972cadde2e676f9ded08aef6bb77f5f157684a82"
 "checksum gcc 0.3.54 (registry+https://github.com/rust-lang/crates.io-index)" = "5e33ec290da0d127825013597dbdfc28bee4964690c7ce1166cbc2a7bd08b1bb"
+"checksum itertools 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "99f3f75d7cf195a7eedb0611efe8684b55c6c7264afe3d8bc00b704f061c0fdf"
 "checksum jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "cffc930ce6a38a4013e30567b559bdc79f601013ba4a81e65dbda9207263efd4"
 "checksum jni-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "de0aaaba8809ab8d83a53fe2b313b996b79e8632b855eae9f70ad4323dca91b8"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
+"checksum lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)" = "76f033c7ad61445c5b347c7382dd1237847eb1bce590fe50365dcb33d546be73"
 "checksum libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)" = "5ba3df4dcb460b9dfbd070d41c94c19209620c191b0340b929ce748a2bcd42d2"
 "checksum libsqlite3-sys 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "370090ad578ba845a3ad4f383ceb3deba7abd51ab1915ad1f2c982cc6035e31c"
 "checksum linked-hash-map 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7860ec297f7008ff7a1e3382d7f7e1dcd69efc94751a2284bafc3d013c2aa939"
 "checksum log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "880f77541efa6e5cc74e76910c9884d9859683118839d6a1dc3b11e63512565b"
 "checksum lru-cache 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4d06ff7ff06f729ce5f4e227876cb88d10bc59cd4ae1e09fbb2bde15c850dc21"
+"checksum maplit 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "22593015b8df7747861c69c28acd32589fb96c1686369f3b661d12e409d4cf65"
+"checksum matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "100aabe6b8ff4e4a7e32c1c13523379802df0772b82466207ac25b013f193376"
+"checksum memchr 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "148fab2e51b4f1cfc66da2a7c32981d1d3c083a803978268bb11fe4b86925e7a"
+"checksum mentat 0.4.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_db 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_parser_utils 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_query 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_query_algebrizer 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_query_parser 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_query_projector 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_query_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_query_translator 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_sql 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_tx 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum mentat_tx_parser 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)" = "<none>"
+"checksum num 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "a311b77ebdc5dd4cf6449d81e4135d9f0e3b153839ac90e648a8ef538f923525"
+"checksum num-bigint 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "8fd0f8dbb4c0960998958a796281d88c16fbe68d87b1baa6f31e2979e81fd0bd"
+"checksum num-complex 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "503e668405c5492d67cf662a81e05be40efe2e6bcf10f7794a07bd9865e704e6"
+"checksum num-integer 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)" = "d1452e8b06e448a07f0e6ebb0bb1d92b8890eea63288c0b627331d53514d0fba"
+"checksum num-iter 0.1.34 (registry+https://github.com/rust-lang/crates.io-index)" = "7485fcc84f85b4ecd0ea527b14189281cf27d60e583ae65ebc9c088b13dffe01"
+"checksum num-rational 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "0c7cb72a95250d8a370105c828f388932373e0e94414919891a0f945222310fe"
+"checksum num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "99843c856d68d8b4313b03a17e33c4bb42ae8f6610ea81b28abe076ac721b9b0"
+"checksum ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "58d25b6c0e47b20d05226d288ff434940296e7e2f8b877975da32f862152241f"
+"checksum peg 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)" = "36a474cba42744afe0f223e9d4263594b3387f172e512259c72d2011e477c4fb"
 "checksum pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "3a8b4c6b8165cd1a1cd4b9b120978131389f64bdaf456435caa41e630edba903"
+"checksum pretty 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "023e184a8dc60fde1d6e0916637835ad61d68fe83a190bf74977e8e4dca9d24e"
+"checksum quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "7a6e920b65c65f10b2ae65c831a81a073a89edd28c7cce89475bff467ab4167a"
 "checksum rand 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)" = "6475140dfd8655aeb72e1fd4b7a1cc1c202be65d71669476e392fe62532b9edd"
 "checksum redox_syscall 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)" = "8dde11f18c108289bef24469638a04dce49da56084f2d50618b226e47eb04509"
+"checksum regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1731164734096285ec2a5ec7fea5248ae2f5485b3feeb0115af4fda2183b2d1b"
+"checksum regex-syntax 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ad890a5eef7953f55427c50575c680c42841653abd2b028b68cd223d157f62db"
 "checksum rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ffaf393ccdac5580092a4d8eb2edffbffe9a8c4484c62d8a0fcac99bc3718566"
+"checksum rustc-demangle 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "aee45432acc62f7b9a108cc054142dac51f979e69e71ddce7d6fc7adf29e817e"
+"checksum rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)" = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
+"checksum rustc_version 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "c5f5376ea5e30ce23c03eb77cbe4962b988deead10910c372b226388b594c084"
+"checksum semver 0.1.20 (registry+https://github.com/rust-lang/crates.io-index)" = "d4f410fedcf71af0345d7607d246e7ad15faaadd49d240ee3b24e5dc21a820ac"
+"checksum tabwriter 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3b7810162bc0a2eb2dc9a9bfd16ddb2d1f6022df3236d1478937bfadcb12385e"
+"checksum thread_local 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "1697c4b57aeeb7a536b647165a2825faddffb1d3bad386d507709bd51a90bb14"
 "checksum time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)" = "d5d788d3aa77bc0ef3e9621256885555368b47bd495c13dd2e7413c89f845520"
+"checksum typed-arena 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5934776c3ac1bea4a9d56620d6bf2d483b20d394e49581db40f187e1118ff667"
+"checksum unicode-width 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "bf3a113775714a22dcb774d8ea3655c53a32debae63a063acc00a91cc586245f"
+"checksum unreachable 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1f2ae5ddb18e1c92664717616dd9549dde73f539f01bd7b77c2edb2446bdff91"
+"checksum unreachable 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "382810877fe448991dfc7f0dd6e3ae5d58088fd0ea5e35189655f84e6814fa56"
+"checksum utf8-ranges 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "662fab6525a98beff2921d7f61a39e7d59e0b425ebc7d0d9e66d316e55124122"
 "checksum uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7cfec50b0842181ba6e713151b72f4ec84a6a7e2c9c8a8a3ffc37bb1cd16b231"
+"checksum uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bcc7e3b898aa6f6c08e5295b6c89258d1331e9ac578cc992fb818759951bdc22"
 "checksum vcpkg 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9e0a7d8bed3178a8fb112199d466eeca9ed09a14ba8ad67718179b4fd5487d0b"
+"checksum void 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2d315eee3b34aca4797b2da6b13ed88266e6d612562a0c46390af8299fc699bc"
