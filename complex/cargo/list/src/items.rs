@@ -23,7 +23,7 @@ use ffi_utils::strings::{
 };
 use labels::Label;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Item {
     pub uuid: String,
     pub name: String,
@@ -139,4 +139,14 @@ pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: siz
     let index = index as usize;
     let label = Box::new(label_list[index].clone());
     Box::into_raw(label)
+}
+
+
+#[cfg(test)]
+mod test {
+
+    #[test]
+    fn test_new_item() {
+
+    }
 }

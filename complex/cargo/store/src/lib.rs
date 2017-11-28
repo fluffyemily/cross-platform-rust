@@ -16,7 +16,6 @@ use std::os::raw::{
 };
 use std::sync::{
     Arc,
-    Mutex
 };
 
 use rusqlite::{
@@ -29,8 +28,8 @@ use ffi_utils::strings::c_char_to_string;
 #[repr(C)]
 /// Store containing a SQLite connection
 pub struct Store {
-    conn: Mutex<Arc<Connection>>,
-    uri: String,
+    conn: Arc<Connection>,
+    uri: Option<String>,
 }
 
 impl Drop for Store {
@@ -40,26 +39,32 @@ impl Drop for Store {
 }
 
 impl Store {
-    pub fn new(uri: String) -> Self {
+    pub fn new<T>(uri: T) -> Self
+    where T: Into<Option<String>> {
+        let uri_string = uri.into();
+        let c = match &uri_string {
+            &Some(ref u) => Connection::open(u.clone()).expect("Expected a connection for URI"),
+            &None => Connection::open_in_memory().expect("Expected an in memory connection"),
+        };
         Store {
-            conn: Mutex::new(Arc::new(Connection::open(uri.clone()).unwrap())),
-            uri: uri.clone(),
+            conn: Arc::new(c),
+            uri: uri_string,
         }
     }
 
-    pub fn write_connection(&self) -> Arc<Connection> {
-        self.conn.lock().unwrap().clone()
+    pub fn get_conn_mut(&mut self) -> &mut Connection {
+        Arc::get_mut(&mut self.conn).unwrap()
     }
 
-    pub fn read_connection(&self) -> Arc<Connection> {
-        Arc::new(Connection::open_with_flags(self.uri.clone(), rusqlite::SQLITE_OPEN_READ_ONLY).unwrap())
+    pub fn get_conn(&self) -> Arc<Connection> {
+        Arc::clone(&self.conn)
     }
 }
 
 #[no_mangle]
 pub extern "C" fn new_store(uri: *const c_char) -> *mut Arc<Store> {
     let uri = c_char_to_string(uri);
-    let store = Arc::new(Store::new(uri));
+    let store = Arc::new(Store::new(Some(uri)));
     Box::into_raw(Box::new(store))
 }
 
