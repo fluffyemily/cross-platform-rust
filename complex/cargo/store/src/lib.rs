@@ -28,7 +28,7 @@ use ffi_utils::strings::c_char_to_string;
 #[repr(C)]
 /// Store containing a SQLite connection
 pub struct Store {
-    pub conn: Arc<Connection>,
+    conn: Arc<Connection>,
     uri: Option<String>,
 }
 
@@ -39,15 +39,25 @@ impl Drop for Store {
 }
 
 impl Store {
-    pub fn new(uri: Option<String>) -> Self {
-        let c = match &uri {
-            &Some(ref u) => Connection::open(u.clone()).unwrap(),
-            &None => Connection::open_in_memory().unwrap(),
+    pub fn new<T>(uri: T) -> Self
+    where T: Into<Option<String>> {
+        let uri_string = uri.into();
+        let c = match &uri_string {
+            &Some(ref u) => Connection::open(u.clone()).expect("Expected a connection for URI"),
+            &None => Connection::open_in_memory().expect("Expected an in memory connection"),
         };
         Store {
             conn: Arc::new(c),
-            uri: uri,
+            uri: uri_string,
         }
+    }
+
+    pub fn get_conn_mut(&mut self) -> &mut Connection {
+        Arc::get_mut(&mut self.conn).unwrap()
+    }
+
+    pub fn get_conn(&self) -> Arc<Connection> {
+        Arc::clone(&self.conn)
     }
 }
 
