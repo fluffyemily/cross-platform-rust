@@ -26,8 +26,10 @@ pub mod items;
 
 use labels::Label;
 use ffi_utils::strings::c_char_to_string;
+use ffi_utils::strings::to_string;
 use ffi_utils::android::log;
 use items::Item;
+use items::new_item;
 use store::Store;
 
 
@@ -242,10 +244,48 @@ pub unsafe extern "C" fn list_manager_get_all_labels(manager: *const Arc<ListMan
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_create_item(manager: *const Arc<ListManager>, item: *const Item) {
-    let manager = &*manager;
+pub unsafe extern "C" fn list_manager_create_item(manager: *const Arc<ListManager>, item: *mut Item) {
+    log("HELLO CREATE ITEM!!!");
+    log(&format!("args: {:?}, {:?}", manager, item)[..]);
     let item = &*item;
+    log(&format!("Got item: {:?}", item)[..]);
+
+    let manager = &*manager;
+    log(&format!("Got manager: {:?}", manager)[..]);
+    
     manager.create_item(item);
+}
+
+use std::panic;
+use libc::time_t;
+use time::Timespec;
+
+#[no_mangle]
+pub unsafe extern "C" fn a_list_manager_create_item(manager: *const Arc<ListManager>, name: *const c_char, due_date: *const time_t) {
+    log("HELLO CREATE ITEM!!!");
+    let name = c_char_to_string(name);
+    log(&format!("Item: {:?}, {:?}, {:?}", name, due_date, manager)[..]);
+
+    let result = panic::catch_unwind(|| {
+        // log(&format!("Args: {:?}, {:?}", manager, item)[..]);
+        let manager = Arc::from_raw(manager);
+        let mut item = new_item();
+        item.name = name;
+        item.due_date = Some(Timespec::new(due_date as i64, 0));
+        manager.create_item(&item);
+        // log(&format!("Manager: {:?}", manager)[..]);
+    });
+
+    if result.is_ok() {
+        log("Did the thing!");
+    } else {
+        log("Error doing the thing");
+        log(
+            &format!(
+                "Error doing the thing: {:?}", result.unwrap_err().downcast_ref::<String>()
+            )[..]
+        );
+    }
 }
 
 #[no_mangle]
@@ -262,22 +302,4 @@ pub unsafe extern "C" fn list_manager_create_label(manager: *const Arc<ListManag
     let color = c_char_to_string(color);
     let label = Box::new(manager.create_label(name, color).unwrap());
     Box::into_raw(label)
-}
-
-#[cfg(target_os="android")]
-#[allow(non_snake_case)]
-pub mod android {
-    extern crate jni;
-
-    use super::*;
-    use self::jni::JNIEnv;
-    use self::jni::objects::{JClass, JString};
-    use self::jni::sys::{jlong};
-
-    #[no_mangle]
-    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_itemCreate(env: JNIEnv, _: JClass, list_manager: *mut ListManager, item: *mut Item) {
-        let item = &mut*item;
-        let list_manager = &mut*list_manager;
-        list_manager.create_item(item);
-    }
 }

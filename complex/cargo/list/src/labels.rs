@@ -35,6 +35,11 @@ pub unsafe extern "C" fn label_destroy(label: *mut Label) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn a_label_destroy(_: Box<Label>) {
+    // magic!
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn label_get_name(label: *const Label) -> *mut c_char {
     let label = &*label;
     string_to_c_char(label.name.clone())

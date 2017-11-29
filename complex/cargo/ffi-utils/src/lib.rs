@@ -14,6 +14,7 @@ pub mod strings {
         CString,
         CStr
     };
+    use std::str;
 
     pub fn c_char_to_string(cchar: *const c_char) -> String {
         let c_str = unsafe { CStr::from_ptr(cchar) };
@@ -22,6 +23,11 @@ pub mod strings {
             Ok(string) => string,
         };
         r_str.to_string()
+    }
+
+    pub fn to_string(pointer: *const c_char) -> String {
+        let slice = unsafe { CStr::from_ptr(pointer).to_bytes() };
+        str::from_utf8(slice).unwrap().to_string()
     }
 
     pub fn string_to_c_char(r_string: String) -> *mut c_char {

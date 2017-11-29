@@ -29,6 +29,7 @@ dependencies {
     compile 'com.android.support:design:26.1.0'
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile 'net.java.dev.jna:jna:4.5.0'
 }
 repositories {
     mavenCentral()

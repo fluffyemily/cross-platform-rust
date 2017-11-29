@@ -20,6 +20,7 @@ use time::Timespec;
 use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
+    to_string
 };
 use ffi_utils::android::log;
 use labels::Label;
@@ -39,7 +40,7 @@ impl Drop for Item {
     }
 }
 
-fn new_item() -> Item {
+pub fn new_item() -> Item {
     Item {
         uuid: "".to_string(),
         name: "".to_string(),
@@ -61,6 +62,16 @@ pub unsafe extern "C" fn item_destroy(item: *mut Item) {
     let _ = Box::from_raw(item);
 }
 
+// TODO Can these simpler android methods also work for swift?
+#[no_mangle]
+pub extern fn a_item_new() -> Box<Item> {
+    Box::new(new_item())
+}
+
+pub extern "C" fn a_item_destroy(_: Box<Item>) {
+    // Rust will clean up for us automatically, since we own the Item.
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn item_get_name(item: *const Item) -> *mut c_char {
     let item = &*item;
@@ -71,6 +82,13 @@ pub unsafe extern "C" fn item_get_name(item: *const Item) -> *mut c_char {
 pub unsafe extern "C" fn item_set_name(item: *mut Item, name: *const c_char) {
     let item = &mut*item;
     item.name = c_char_to_string(name);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn a_item_set_name(item: &mut Item, name: *const c_char) {
+    log(&format!("NAME: Got item: {:?}", item)[..]);
+    item.name = to_string(name);
+    log(&format!("NAME: Updated item: {:?}", item)[..]);
 }
 
 #[no_mangle]
@@ -92,11 +110,24 @@ pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> *mut i64 {
 #[no_mangle]
 pub unsafe extern "C" fn item_set_due_date(item: *mut Item, due_date: *const size_t) {
     let item = &mut*item;
+    log(&format!("DUE DATE: Got item: {:?}", item)[..]);
     if !due_date.is_null() {
         item.due_date = Some(Timespec::new(due_date as i64, 0));
     } else {
         item.due_date = None;
     }
+    log(&format!("DUE DATE: Updated item: {:?}", item)[..]);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn a_item_set_due_date(item: &mut Item, due_date: *const size_t) {
+    log(&format!("DUE DATE: Got item: {:?}", item)[..]);
+    if !due_date.is_null() {
+        item.due_date = Some(Timespec::new(due_date as i64, 0));
+    } else {
+        item.due_date = None;
+    }
+    log(&format!("DUE DATE: Updated item: {:?}", item)[..]);
 }
 
 #[no_mangle]
@@ -146,6 +177,9 @@ pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: siz
     Box::into_raw(label)
 }
 
+use std::panic;
+use std::any::Any;
+
 #[cfg(target_os="android")]
 #[allow(non_snake_case)]
 pub mod android {
@@ -155,34 +189,50 @@ pub mod android {
     use self::jni::JNIEnv;
     use self::jni::objects::{JClass, JString, JValue};
     use self::jni::sys::{jlong};
+    use ListManager;
 
-    #[no_mangle]
-    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_newItem(env: JNIEnv, _: JClass) -> jlong {
-        Box::into_raw(Box::new(new_item())) as jlong
-    }
+    // #[no_mangle]
+    // pub unsafe extern fn Java_com_mozilla_toodle_Item_newItem(env: JNIEnv, _: JClass) -> jlong {
+    //     Box::into_raw(Box::new(new_item())) as jlong
+    // }
 
-    #[no_mangle]
-    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_itemSetName(env: JNIEnv, _: JClass, item: *mut Item, name: JString) {
-        let item = &mut*item;
-        log("Got item");
+    // #[no_mangle]
+    // pub unsafe extern fn Java_com_mozilla_toodle_Item_itemSetName(env: JNIEnv, class: JClass, item: *mut Item, name: JString) {
+    //     // debugging notes:
+    //     // still not certain why this doesn't work as you'd expect it to. but here's a curious thing:
+    //     // if 'item' arg is omitted, and java side of this is modified to just pass in 'name', then
+    //     // env.get_string(name) works.
+    //     // otherwise, here's the error i see:
+    //     // get_string result: Some("Couldn\'t get item name: Error(NullPtr(\"get_string obj argument\"), State { next_error: None })")
+    //     // Java side looks like this: itemSetName(long itemPtr, String name)
 
-        // TODO line below crashes... why?
-        let new_name: String = env.get_string(name).expect("Couldn't get item name").into();
-        log("Got name");
-        log(&new_name);
+    //     let item = &mut*item;
+    //     log(&format!("Got item: {:?}", item)[..]);
+        
+    //     let result = panic::catch_unwind(|| {
+    //         let new_name_res = env.get_string(name).expect("Couldn't get item name");
+    //         let new_name: String = String::from(new_name_res);
+    //         log(&format!("Got name: {:?}", new_name)[..]);
+    //     });
 
-        item.name = new_name;
-    }
+    //     if result.is_ok() {
+    //         log("Processed 'name'!");
+    //     } else {
+    //         log(
+    //             &format!(
+    //                 "Error updating name: {:?}", result.unwrap_err().downcast_ref::<String>()
+    //             )[..]
+    //         );
+    //         item.name = String::from("Test name from Rust");
+    //     }
+    // }
 
-    #[no_mangle]
-    pub unsafe extern fn Java_com_mozilla_toodle_RustToodle_itemSetDueDate(env: JNIEnv, _: JClass, item: *mut Item, due_date: JValue) {
-        let item = &mut*item;
-        log("Got item");
+    // #[no_mangle]
+    // pub unsafe extern fn Java_com_mozilla_toodle_Item_itemSetDueDate(env: JNIEnv, _: JClass, item: *mut Item, due_date: jlong) {
+    //     let item = &mut*item;
+    //     log(&format!("Got item: {:?}", item)[..]);
+    //     log(&format!("Got due date: {:?}", due_date)[..]);
 
-        // TODO line below crashes... why?
-        let due_date: i64 = due_date.j().expect("Could not get due date").into();
-        log("Got due date");
-
-        item.due_date = Some(Timespec::new(due_date, 0));
-    }
+    //     item.due_date = Some(Timespec::new(due_date, 0));
+    // }
 }
