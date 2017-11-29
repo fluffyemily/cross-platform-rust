@@ -23,8 +23,6 @@ use ffi_utils::strings::c_char_to_string;
 use list::ListManager;
 use store::Store;
 
-#[repr(C)]
-#[derive(Debug)]
 pub struct Toodle {
     store: Arc<Store>,
     list: Arc<ListManager>

@@ -247,8 +247,8 @@ pub unsafe extern "C" fn list_manager_get_all_labels(manager: *const Arc<ListMan
 
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_create_item(manager: *const Arc<ListManager>, item: *mut Item) {
-    let item = &*item;
     let manager = &*manager;
+    let item = &*item;
     manager.create_item(item);
 }
 
