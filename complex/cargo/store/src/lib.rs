@@ -18,6 +18,7 @@ extern crate mentat_db;
 extern crate ordered_float;
 extern crate rusqlite;
 extern crate time;
+extern crate uuid;
 
 extern crate ffi_utils;
 
@@ -103,12 +104,12 @@ impl<'a> ToTypedValue for &'a f64 {
 
 impl<'a> ToTypedValue for &'a Timespec {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
-        let micro_seconds = (self.sec / 1000000) + i64::from((self.nsec * 1000));
+        let micro_seconds = (self.sec * 1000000) + i64::from((self.nsec * 1000));
         Ok(TypedValue::Instant(DateTime::<Utc>::from_micros(micro_seconds)))
     }
 }
 
-impl<'a> ToTypedValue for &'a Uuid {
+impl<'a> ToTypedValue for &'a mentat_core::Uuid {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
         Ok(TypedValue::Uuid((*self).to_owned()))
     }
@@ -156,7 +157,11 @@ impl Store {
         Ok(())
     }
 
-    pub fn query<T>(&self, query: &str, inputs: &[&(&String, &T)]) ->  Result<QueryResults, store_errors::Error>
+    pub fn query(&self, query: &str) ->  Result<QueryResults, store_errors::Error> {
+        Ok(self.conn.q_once(&self.handle, query, None)?)
+    }
+
+    pub fn query_args<T>(&self, query: &str, inputs: &[&(&String, &T)]) ->  Result<QueryResults, store_errors::Error>
         where T: ToTypedValue {
         let mut ee = vec![];
         for &&(ref arg, ref val) in inputs.iter() {

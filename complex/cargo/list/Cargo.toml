@@ -8,8 +8,20 @@ jni = { version = "0.5", default-features = false }
 
 [dependencies]
 time = "0.1.38"
-uuid = { version = "0.4", features = ["v4"] }
+uuid = { version = "0.5", features = ["v4"] }
 libc = "0.2.32"
+
+[dependencies.edn]
+git = "https://github.com/mozilla/mentat.git"
+rev = "5558820"
+
+[dependencies.mentat]
+git = "https://github.com/mozilla/mentat.git"
+rev = "5558820"
+
+[dependencies.mentat_core]
+git = "https://github.com/mozilla/mentat.git"
+rev = "5558820"
 
 [dependencies.store]
 path = "../store"

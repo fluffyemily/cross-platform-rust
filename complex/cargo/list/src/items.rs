@@ -9,12 +9,21 @@
 // specific language governing permissions and limitations under the License.
 
 use libc::size_t;
+use std::any::Any;
 use std::os::raw::{
     c_char,
     c_int,
 };
 use std::ptr;
 
+pub use edn::{
+    DateTime,
+    Utc,
+};
+use mentat_core::{
+    TypedValue,
+    Uuid,
+};
 use time::Timespec;
 
 use ffi_utils::strings::{
@@ -26,7 +35,7 @@ use labels::Label;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
     pub id: Option<i64>,
-    pub uuid: String,
+    pub uuid: Uuid,
     pub name: String,
     pub due_date: Option<Timespec>,
     pub completion_date: Option<Timespec>,
@@ -39,12 +48,70 @@ impl Drop for Item {
     }
 }
 
+impl Item {
+    pub fn from_row(row: &Vec<TypedValue>) -> Option<Item> {
+        let mut item = Item{
+            id: row[0].clone().to_inner(),
+            uuid: row[1].clone().to_inner(),
+            name: row[2].clone().to_inner(),
+            due_date: row[3].clone().to_inner(),
+            completion_date: row[4].clone().to_inner(),
+            labels: vec![]
+        };
+        println!("item: {:?}", item);
+        Some(item)
+    }
+}
+
+trait ToInner<T> {
+    fn to_inner(self) -> T;
+}
+
+impl ToInner<Option<i64>> for TypedValue {
+    fn to_inner(self) -> Option<i64> {
+        match self {
+            TypedValue::Long(v) => Some(v),
+            _ => None,
+        }
+    }
+}
+
+impl ToInner<String> for TypedValue {
+    fn to_inner(self) -> String {
+        match self {
+            TypedValue::String(s) => s.to_string(),
+            _ => String::new(),
+        }
+    }
+}
+
+impl ToInner<Uuid> for TypedValue {
+    fn to_inner(self) -> Uuid {
+        match self {
+            TypedValue::Uuid(u) => u,
+            _ => Uuid::nil(),
+        }
+    }
+}
+
+impl ToInner<Option<Timespec>> for TypedValue {
+    fn to_inner(self) -> Option<Timespec> {
+        match self {
+            TypedValue::Instant(v) => {
+                let timestamp = v.timestamp();
+                Some(Timespec::new(timestamp, 0))
+            },
+            _ => None,
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn item_new() -> *mut Item {
     let item = Item{
         id: None,
-        uuid: "".to_string(),
-        name: "".to_string(),
+        uuid: Uuid::nil(),
+        name: String::new(),
         due_date: None,
         completion_date: None,
         labels: vec![]

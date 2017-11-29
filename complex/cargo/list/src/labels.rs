@@ -11,6 +11,9 @@
 use std::os::raw::{
     c_char,
 };
+use std::rc::Rc;
+
+use mentat_core::TypedValue;
 
 use ffi_utils::strings::{
     string_to_c_char,
@@ -26,6 +29,21 @@ pub struct Label {
 impl Drop for Label {
     fn drop(&mut self) {
         println!("{:?} is being deallocated", self);
+    }
+}
+
+impl Label {
+    pub fn from_row(row: &Vec<TypedValue>) -> Option<Label> {
+        let label_row: Vec<String> = row.iter().filter_map(|col| {
+            match col {
+                &TypedValue::String(ref val) => Some(val.to_string()),
+                _ => None
+            }
+        }).collect();
+        Some(Label {
+            name: label_row[0].to_owned(),
+            color: label_row[1].to_owned(),
+        })
     }
 }
 
