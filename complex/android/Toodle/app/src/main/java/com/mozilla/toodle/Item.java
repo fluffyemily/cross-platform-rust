@@ -35,7 +35,7 @@ class Item {
     }
 
     void save() {
-        // Objects are auto-closed as they go out of scope.
+        // Automatic resource management magic.
         try (final Toodle toodle = new Toodle(context)) {
             try (final ListManager listManager = toodle.getListManager()) {
                 listManager.createItem(name, dueDate);

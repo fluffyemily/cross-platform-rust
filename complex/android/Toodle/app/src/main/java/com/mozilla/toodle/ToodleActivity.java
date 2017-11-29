@@ -28,7 +28,7 @@ public class ToodleActivity extends Activity {
         layoutManager = new LinearLayoutManager(this);
         listRecyclerView.setLayoutManager(layoutManager);
 
-        listAdapter = new ListAdapter(new String[] {"One", "Two"});
+        listAdapter = new ListAdapter(getApplicationContext());
         listRecyclerView.setAdapter(listAdapter);
 
         final FloatingActionButton newItemBtn = findViewById(R.id.newItem);

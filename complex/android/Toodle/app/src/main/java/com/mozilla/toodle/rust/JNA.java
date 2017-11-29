@@ -17,15 +17,17 @@ public interface JNA extends Library {
     JNA INSTANCE = (JNA) Native.loadLibrary(JNA_LIBRARY_NAME, JNA.class);
 
     Pointer new_toodle(String dbPath);
+    void toodle_destroy(Pointer toodle);
+
     Pointer toodle_list(Pointer toodle);
+    void toodle_list_destroy(Pointer listManager);
 
     void list_manager_create_item_direct(Pointer listManager, String name, long dueDate);
+    void list_manager_on_items_changed(ItemsChangedCallback callback);
+
     // TODO...
     // void a_item_set_name(String uuid, String name);
     // void a_item_set_due_date(String uuid, long dueDate);
     // get items
     // get labels..?
-
-    void toodle_destroy(Pointer toodle);
-    void toodle_list_destroy(Pointer listManager);
 }

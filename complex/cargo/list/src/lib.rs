@@ -38,13 +38,17 @@ use store::Store;
 #[derive(Debug)]
 #[repr(C)]
 pub struct ListManager {
-    store: Arc<Store>,
+    store: Arc<Store>
 }
+
+// TODO this is pretty horrible, but I couldn't get this to live inside
+// a ListManager struct and mutate it.
+static mut changed_callback: Option<extern fn()> = None;
 
 impl ListManager {
     pub fn new(store: Arc<Store>) -> ListManager {
-        let manager = ListManager {
-            store: store,
+        let mut manager = ListManager {
+            store: store
         };
         manager.create_labels_table();
         manager.create_items_table();
@@ -268,7 +272,11 @@ pub unsafe extern "C" fn list_manager_create_item_direct(manager: *const Arc<Lis
     });
 
     if result.is_ok() {
-        log("Created item!");
+        // Let whoever's listening know that there are new items!
+        match changed_callback {
+            Some(f) => f(),
+            None => ()
+        }
     } else {
         log(
             &format!(
@@ -276,6 +284,11 @@ pub unsafe extern "C" fn list_manager_create_item_direct(manager: *const Arc<Lis
             )[..]
         );
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn list_manager_on_items_changed(callback: extern fn()) {
+    changed_callback = Some(callback);
 }
 
 #[no_mangle]

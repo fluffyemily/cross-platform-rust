@@ -5,17 +5,37 @@
 
 package com.mozilla.toodle;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.mozilla.toodle.rust.ItemsChangedCallback;
+import com.mozilla.toodle.rust.ListManager;
+import com.mozilla.toodle.rust.Toodle;
+
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private final String[] dataset;
+    // We must keep reference to the callback around, otherwise it'll get GC'd and the native code
+    // will call an empty stub instead of our callback.
+    private final ItemsChangedCallback itemsChangedCallback = new ItemsChangedCallback() {
+        @Override
+        public void items() {
+            Log.i("RustyToodleJava", "Got new items!");
+        }
+    };
 
-    ListAdapter(String[] dataset) {
-        this.dataset = dataset;
+    ListAdapter(Context context) {
+        this.dataset = new String[] {"One", "Two"};
+
+        try (final Toodle toodle = new Toodle(context)) {
+            try (final ListManager listManager = toodle.getListManager()) {
+                listManager.registerChangedItemsCallback(itemsChangedCallback);
+            }
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

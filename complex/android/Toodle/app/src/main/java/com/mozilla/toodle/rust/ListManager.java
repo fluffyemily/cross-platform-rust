@@ -18,6 +18,10 @@ public class ListManager extends RustObject {
         );
     }
 
+    public void registerChangedItemsCallback(ItemsChangedCallback callback) {
+        JNA.INSTANCE.list_manager_on_items_changed(callback);
+    }
+
     @Override
     public void close() {
         JNA.INSTANCE.toodle_list_destroy(rawPointer);
