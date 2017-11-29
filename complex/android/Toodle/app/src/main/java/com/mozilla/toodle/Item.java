@@ -35,7 +35,6 @@ class Item {
     }
 
     void save() {
-        // Automatic resource management magic.
         try (final Toodle toodle = new Toodle(context)) {
             try (final ListManager listManager = toodle.getListManager()) {
                 listManager.createItem(name, dueDate);

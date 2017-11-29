@@ -13,17 +13,17 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.mozilla.toodle.rust.ItemUuidsCallback;
+import com.mozilla.toodle.rust.ItemSet;
+import com.mozilla.toodle.rust.ItemsCallback;
 import com.mozilla.toodle.rust.ItemsChangedCallback;
 import com.mozilla.toodle.rust.ListManager;
 import com.mozilla.toodle.rust.Toodle;
-import com.mozilla.toodle.rust.Uuid;
-import com.mozilla.toodle.rust.UuidSet;
+import com.mozilla.toodle.rust.Item;
 
 import java.util.List;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
-    private String[] dataset;
+    private List<Item> dataset;
     private final Context context;
 
     // We must keep reference to the callback around, otherwise it'll get GC'd and the native code
@@ -34,16 +34,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             Log.i("RustyToodleJava", "Got new items!");
             try (final Toodle toodle = new Toodle(context)) {
                 try (final ListManager listManager = toodle.getListManager()) {
-                    listManager.getAllUuids(new ItemUuidsCallback() {
+                    listManager.getAllItems(new ItemsCallback() {
                         @Override
-                        public void uuids(UuidSet.ByReference uuidSet) {
-                            final List<Uuid> uuids = uuidSet.getUuids();
-                            final String[] uuidsArray = new String[uuids.size()];
-                            for (int i = 0; i < uuids.size(); i++) {
-                                uuidsArray[i] = uuids.get(i).uuid;
-                            }
-                            dataset = uuidsArray;
-                            Log.i("RustyToodleJava", "Got uuids! " + uuids);
+                        public void items(ItemSet.ByReference itemSet) {
+                            dataset = itemSet.getItems();
+                            notifyDataSetChanged();
                         }
                     });
                 }
@@ -53,7 +48,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     ListAdapter(Context context) {
         this.context = context;
-        this.dataset = new String[] {"One", "Two"};
 
         try (final Toodle toodle = new Toodle(context)) {
             try (final ListManager listManager = toodle.getListManager()) {
@@ -82,11 +76,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(dataset[position]);
+        ((TextView) holder.itemView.findViewById(R.id.itemTitle)).setText(dataset.get(position).itemName);
     }
 
     @Override
     public int getItemCount() {
-        return dataset.length;
+        return dataset.size();
     }
 }

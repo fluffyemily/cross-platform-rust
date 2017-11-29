@@ -5,8 +5,6 @@
 
 package com.mozilla.toodle.rust;
 
-import android.util.Log;
-
 public class ListManager extends RustObject {
     /* package-private */ ListManager(Toodle toodle) {
         rawPointer = JNA.INSTANCE.toodle_list(toodle.rawPointer);
@@ -26,6 +24,10 @@ public class ListManager extends RustObject {
 
     public void getAllUuids(ItemUuidsCallback callback) {
         JNA.INSTANCE.list_manager_all_uuids(rawPointer, callback);
+    }
+
+    public void getAllItems(ItemsCallback callback) {
+        JNA.INSTANCE.list_manager_all_items(rawPointer, callback);
     }
 
     @Override

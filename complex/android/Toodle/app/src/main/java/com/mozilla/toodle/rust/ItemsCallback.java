@@ -1,8 +1,7 @@
 package com.mozilla.toodle.rust;
 
-/**
- * Created by grisha on 11/29/17.
- */
+import com.sun.jna.Callback;
 
-public interface ItemsCallback {
+public interface ItemsCallback extends Callback {
+    void items(ItemSet.ByReference items);
 }
