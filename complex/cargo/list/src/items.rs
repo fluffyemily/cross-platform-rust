@@ -9,6 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 use libc::size_t;
+use libc::time_t;
 use std::os::raw::{
     c_char,
     c_int,
@@ -30,6 +31,15 @@ pub struct Item {
     pub due_date: Option<Timespec>,
     pub completion_date: Option<Timespec>,
     pub labels: Vec<Label>,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct ItemJNA {
+    pub uuid: *const c_char,
+    pub name: *const c_char,
+    // pub due_date: Option<*const time_t>,
+    // pub completion_date: Option<*const time_t>
 }
 
 impl Drop for Item {

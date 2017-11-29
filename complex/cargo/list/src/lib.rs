@@ -34,6 +34,7 @@ use ffi_utils::strings::{
 };
 use ffi_utils::android::log;
 use items::Item;
+use items::ItemJNA;
 use items::new_item;
 use store::Store;
 
@@ -224,6 +225,44 @@ impl ListManager {
         uuids
     }
 
+    pub fn fetch_all_items(&self) -> Vec<ItemJNA> {
+        // let sql = r#"SELECT uuid, name, due_date, completion_date FROM items"#;
+        let sql = r#"SELECT uuid, name FROM items"#;
+        log("sql");
+        let conn = self.store.read_connection();
+        log("conn");
+        let mut stmt = conn.prepare(sql).unwrap();
+        log("stmt");
+        let mut item_iter = stmt.query_map(&[], |row| {
+            // let due_date: Option<i64> = row.get(2);
+            // let completion_date: Option<i64> = row.get(3);
+
+            ItemJNA {
+                uuid: string_to_c_char(row.get(0)),
+                name: string_to_c_char(row.get(1)),
+                // due_date: match due_date {
+                //     Some(d) => Some(&Timespec::new(d as i64, 0).nsec),
+                //     None => None
+                // },
+                // completion_date: match completion_date {
+                //     Some(d) => Some(&Timespec::new(d as i64, 0).nsec),
+                //     None => None
+                // }
+            }
+        }).unwrap();
+        log("iter");
+
+        let mut item_list: Vec<ItemJNA> = Vec::new();
+        log("list");
+        while let Some(result) = item_iter.next() {
+            if let Some(i) = result.ok() {
+                item_list.push(i);
+            }
+        }
+        log("while");
+        item_list
+    }
+
     pub fn create_item(&self, item: &Item) -> Option<Item> {
         println!("Creating item {:?}", item);
         let item_sql = r#"INSERT INTO items (uuid, name, due_date, completion_date) VALUES (?, ?, ?, ?)"#;
@@ -324,6 +363,12 @@ pub struct UuidSet {
     uuids: Box<[*const c_char]>
 }
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct ItemSet {
+    items: Box<[ItemJNA]>
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_all_uuids(manager: *const Arc<ListManager>, callback: extern "C" fn(&UuidSet)) {
     let manager = &*manager;
@@ -332,6 +377,23 @@ pub unsafe extern "C" fn list_manager_all_uuids(manager: *const Arc<ListManager>
     let set = UuidSet {
         uuids: uuids.into_boxed_slice()
     };
+
+    callback(&set);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn list_manager_all_items(manager: *const Arc<ListManager>, callback: extern "C" fn(&ItemSet)) {
+    log("all items call!");
+    let manager = &*manager;
+    log("got manager");
+    let items = manager.fetch_all_items();
+    log(&format!("got items {:?}", items)[..]);
+
+    let set = ItemSet {
+        items: items.into_boxed_slice()
+    };
+
+    log(&format!("got itemset {:?}", set)[..]);
 
     callback(&set);
 }
