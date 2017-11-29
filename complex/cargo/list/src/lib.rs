@@ -20,13 +20,15 @@ use std::sync::{
     Arc,
 };
 use uuid::Uuid;
+use std::panic;
+use libc::time_t;
+use time::Timespec;
 
 pub mod labels;
 pub mod items;
 
 use labels::Label;
 use ffi_utils::strings::c_char_to_string;
-use ffi_utils::strings::to_string;
 use ffi_utils::android::log;
 use items::Item;
 use items::new_item;
@@ -100,7 +102,7 @@ impl ListManager {
 
         let mut label_list: Vec<Label> = Vec::new();
         while let Some(result) = label_iter.next() {
-            if let Some(mut label) = result.ok() {
+            if let Some(label) = result.ok() {
                 label_list.push(label);
             }
         }
@@ -121,7 +123,7 @@ impl ListManager {
 
         let mut label_list: Vec<Label> = Vec::new();
         while let Some(result) = label_iter.next() {
-            if let Some(mut label) = result.ok() {
+            if let Some(label) = result.ok() {
                 label_list.push(label);
             }
         }
@@ -245,44 +247,32 @@ pub unsafe extern "C" fn list_manager_get_all_labels(manager: *const Arc<ListMan
 
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_create_item(manager: *const Arc<ListManager>, item: *mut Item) {
-    log("HELLO CREATE ITEM!!!");
-    log(&format!("args: {:?}, {:?}", manager, item)[..]);
     let item = &*item;
-    log(&format!("Got item: {:?}", item)[..]);
-
     let manager = &*manager;
-    log(&format!("Got manager: {:?}", manager)[..]);
-    
     manager.create_item(item);
 }
 
-use std::panic;
-use libc::time_t;
-use time::Timespec;
-
 #[no_mangle]
-pub unsafe extern "C" fn a_list_manager_create_item(manager: *const Arc<ListManager>, name: *const c_char, due_date: *const time_t) {
-    log("HELLO CREATE ITEM!!!");
+pub unsafe extern "C" fn list_manager_create_item_direct(manager: *const Arc<ListManager>, name: *const c_char, due_date: *const time_t) {
     let name = c_char_to_string(name);
-    log(&format!("Item: {:?}, {:?}, {:?}", name, due_date, manager)[..]);
+    log(&format!("Creating item: {:?}, {:?}, {:?}", name, due_date, manager)[..]);
 
     let result = panic::catch_unwind(|| {
-        // log(&format!("Args: {:?}, {:?}", manager, item)[..]);
         let manager = Arc::from_raw(manager);
         let mut item = new_item();
+
         item.name = name;
         item.due_date = Some(Timespec::new(due_date as i64, 0));
+
         manager.create_item(&item);
-        // log(&format!("Manager: {:?}", manager)[..]);
     });
 
     if result.is_ok() {
-        log("Did the thing!");
+        log("Created item!");
     } else {
-        log("Error doing the thing");
         log(
             &format!(
-                "Error doing the thing: {:?}", result.unwrap_err().downcast_ref::<String>()
+                "Error creating item: {:?}", result.unwrap_err().downcast_ref::<String>()
             )[..]
         );
     }

@@ -11,7 +11,7 @@ public class ListManager extends RustObject {
     }
 
     public void createItem(String name, long dueDate) {
-        JNA.INSTANCE.a_list_manager_create_item(
+        JNA.INSTANCE.list_manager_create_item_direct(
                 rawPointer,
                 name,
                 dueDate

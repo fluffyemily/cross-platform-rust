@@ -19,7 +19,7 @@ public interface JNA extends Library {
     Pointer new_toodle(String dbPath);
     Pointer toodle_list(Pointer toodle);
 
-    void a_list_manager_create_item(Pointer listManager, String name, long dueDate);
+    void list_manager_create_item_direct(Pointer listManager, String name, long dueDate);
     // TODO...
     // void a_item_set_name(String uuid, String name);
     // void a_item_set_due_date(String uuid, long dueDate);
