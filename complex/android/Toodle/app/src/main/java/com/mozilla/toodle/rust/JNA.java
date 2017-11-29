@@ -24,6 +24,7 @@ public interface JNA extends Library {
 
     void list_manager_create_item_direct(Pointer listManager, String name, long dueDate);
     void list_manager_on_items_changed(ItemsChangedCallback callback);
+    void list_manager_all_uuids(Pointer listManager, ItemUuidsCallback callback);
 
     // TODO...
     // void a_item_set_name(String uuid, String name);

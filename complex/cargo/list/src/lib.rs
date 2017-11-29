@@ -28,7 +28,10 @@ pub mod labels;
 pub mod items;
 
 use labels::Label;
-use ffi_utils::strings::c_char_to_string;
+use ffi_utils::strings::{
+    string_to_c_char,
+    c_char_to_string
+};
 use ffi_utils::android::log;
 use items::Item;
 use items::new_item;
@@ -41,8 +44,8 @@ pub struct ListManager {
     store: Arc<Store>
 }
 
-// TODO this is pretty horrible, but I couldn't get this to live inside
-// a ListManager struct and mutate it.
+// TODO this is pretty horrible as a global, but I couldn't get this to live inside
+// a ListManager struct and be able to mutate it (must be doing something wrong).
 static mut changed_callback: Option<extern fn()> = None;
 
 impl ListManager {
@@ -204,6 +207,23 @@ impl ListManager {
         }
     }
 
+    pub fn fetch_item_uuids(&self) -> Vec<*const c_char> {
+        let sql = r#"SELECT uuid FROM items "#;
+        let conn = self.store.read_connection();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let mut uuid_iter = stmt.query_map(&[], |row| {
+            row.get(0)
+        }).unwrap();
+        
+        let mut uuids: Vec<*const c_char> = Vec::new();
+        while let Some(result) = uuid_iter.next() {
+            if let Some(i) = result.ok() {
+                uuids.push(string_to_c_char(i));
+            }
+        }
+        uuids
+    }
+
     pub fn create_item(&self, item: &Item) -> Option<Item> {
         println!("Creating item {:?}", item);
         let item_sql = r#"INSERT INTO items (uuid, name, due_date, completion_date) VALUES (?, ?, ?, ?)"#;
@@ -289,6 +309,7 @@ pub unsafe extern "C" fn list_manager_create_item_direct(manager: *const Arc<Lis
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_on_items_changed(callback: extern fn()) {
     changed_callback = Some(callback);
+    callback();
 }
 
 #[no_mangle]
@@ -296,6 +317,23 @@ pub unsafe extern "C" fn list_manager_update_item(manager: *const Arc<ListManage
     let manager = &*manager;
     let item = &*item;
     manager.update_item(item)
+}
+
+#[repr(C)]
+pub struct UuidSet {
+    uuids: Box<[*const c_char]>
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn list_manager_all_uuids(manager: *const Arc<ListManager>, callback: extern "C" fn(&UuidSet)) {
+    let manager = &*manager;
+    let uuids = manager.fetch_item_uuids();
+    
+    let set = UuidSet {
+        uuids: uuids.into_boxed_slice()
+    };
+
+    callback(&set);
 }
 
 #[no_mangle]
