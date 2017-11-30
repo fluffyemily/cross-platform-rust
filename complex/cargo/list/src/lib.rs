@@ -32,9 +32,11 @@ use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string
 };
+use std::ffi::{
+    CString
+};
 use ffi_utils::android::log;
 use items::Item;
-use items::ItemJNA;
 use items::new_item;
 use store::Store;
 
@@ -45,13 +47,13 @@ pub struct ListManager {
     store: Arc<Store>
 }
 
-// TODO this is pretty horrible as a global, but I couldn't get this to live inside
-// a ListManager struct and be able to mutate it (must be doing something wrong).
-static mut changed_callback: Option<extern fn()> = None;
+// TODO this is pretty horrible and rather crafty, but I couldn't get this to live
+// inside a ListManager struct and be able to mutate it...
+static mut CHANGED_CALLBACK: Option<extern fn()> = None;
 
 impl ListManager {
     pub fn new(store: Arc<Store>) -> ListManager {
-        let mut manager = ListManager {
+        let manager = ListManager {
             store: store
         };
         manager.create_labels_table();
@@ -228,11 +230,8 @@ impl ListManager {
     pub fn fetch_all_items(&self) -> Vec<ItemJNA> {
         // let sql = r#"SELECT uuid, name, due_date, completion_date FROM items"#;
         let sql = r#"SELECT uuid, name FROM items"#;
-        log("sql");
         let conn = self.store.read_connection();
-        log("conn");
         let mut stmt = conn.prepare(sql).unwrap();
-        log("stmt");
         let mut item_iter = stmt.query_map(&[], |row| {
             // let due_date: Option<i64> = row.get(2);
             // let completion_date: Option<i64> = row.get(3);
@@ -250,16 +249,13 @@ impl ListManager {
                 // }
             }
         }).unwrap();
-        log("iter");
 
         let mut item_list: Vec<ItemJNA> = Vec::new();
-        log("list");
         while let Some(result) = item_iter.next() {
             if let Some(i) = result.ok() {
                 item_list.push(i);
             }
         }
-        log("while");
         item_list
     }
 
@@ -332,7 +328,7 @@ pub unsafe extern "C" fn list_manager_create_item_direct(manager: *const Arc<Lis
 
     if result.is_ok() {
         // Let whoever's listening know that there are new items!
-        match changed_callback {
+        match CHANGED_CALLBACK {
             Some(f) => f(),
             None => ()
         }
@@ -347,7 +343,7 @@ pub unsafe extern "C" fn list_manager_create_item_direct(manager: *const Arc<Lis
 
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_on_items_changed(callback: extern fn()) {
-    changed_callback = Some(callback);
+    CHANGED_CALLBACK = Some(callback);
     callback();
 }
 
@@ -356,6 +352,15 @@ pub unsafe extern "C" fn list_manager_update_item(manager: *const Arc<ListManage
     let manager = &*manager;
     let item = &*item;
     manager.update_item(item)
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct ItemJNA {
+    uuid: *mut c_char,
+    name: *mut c_char,
+    // pub due_date: Option<*const time_t>,
+    // pub completion_date: Option<*const time_t>
 }
 
 #[repr(C)]
@@ -382,20 +387,42 @@ pub unsafe extern "C" fn list_manager_all_uuids(manager: *const Arc<ListManager>
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_all_items(manager: *const Arc<ListManager>, callback: extern "C" fn(&ItemSet)) {
-    log("all items call!");
+pub unsafe extern "C" fn list_manager_all_items(manager: *const Arc<ListManager>, callback: extern "C" fn(Option<&ItemSet>)) {
     let manager = &*manager;
-    log("got manager");
     let items = manager.fetch_all_items();
-    log(&format!("got items {:?}", items)[..]);
+
+    // TODO there's bound to be a better way. Ideally this should just return an empty set,
+    // but I ran into problems while doing that.
+    let count = items.len();
 
     let set = ItemSet {
         items: items.into_boxed_slice()
     };
 
-    log(&format!("got itemset {:?}", set)[..]);
+    let res = match count > 0 {
+        // NB: we're lending a set, it will be cleaned up automatically once 'callback' returns
+        true => Some(&set),
+        false => None
+    };
 
-    callback(&set);
+    callback(res);
+
+    // TODO can we just clean up after ourselves here, instead of in item_jna_destroy?
+}
+
+// TODO this is pretty crafty... Currently this setup means that ItemJNA could only be used
+// together with something like list_manager_all_items - a function that will clear up ItemJNA itself.
+#[no_mangle]
+pub unsafe extern "C" fn item_jna_destroy(item: *mut ItemJNA) -> *mut ItemJNA {
+    let item = Box::from_raw(item);
+
+    // Reclaim our strings and let Rust clear up their memory.
+    let _ = CString::from_raw(item.uuid);
+    let _ = CString::from_raw(item.name);
+
+    // Prevent Rust from clearing out item itself. It's already managed by list_manager_all_items.
+    // If we'll let Rust clean up entirely here, we'll get an NPE in list_manager_all_items.
+    Box::into_raw(item)
 }
 
 #[no_mangle]

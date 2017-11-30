@@ -8,23 +8,29 @@ package com.mozilla.toodle;
 import android.content.Context;
 
 import com.mozilla.toodle.rust.ListManager;
+import com.mozilla.toodle.rust.NativeItem;
 import com.mozilla.toodle.rust.Toodle;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-class Item {
-    private final Context context;
-
+public class Item {
+    private String uuid;
     private String name;
     private Long dueDate;
 
-    Item(Context context) {
-        this.context = context;
+    public String name() {
+        return name;
     }
 
     Item name(final String name) {
         this.name = name;
         return this;
+    }
+
+    public Long dueDate() {
+        return dueDate;
     }
 
     Item dueDate(final int year, final int month, final int date) {
@@ -34,10 +40,27 @@ class Item {
         return this;
     }
 
-    void save() {
+    private static Item fromNativeItem(NativeItem nativeItem) {
+        final Item item = new Item();
+        item.name = nativeItem.itemName;
+        item.uuid = nativeItem.uuid;
+        return item;
+    }
+
+    static ArrayList<Item> fromNativeItems(List<NativeItem> nativeItems) {
+        final ArrayList<Item> items = new ArrayList<>(nativeItems.size());
+
+        for (NativeItem nativeItem : nativeItems) {
+            items.add(fromNativeItem(nativeItem));
+        }
+
+        return items;
+    }
+
+    void create(Context context) {
         try (final Toodle toodle = new Toodle(context)) {
             try (final ListManager listManager = toodle.getListManager()) {
-                listManager.createItem(name, dueDate);
+                listManager.createItem(this);
             }
         }
     }

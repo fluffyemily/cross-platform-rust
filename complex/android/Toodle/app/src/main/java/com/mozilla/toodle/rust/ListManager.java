@@ -5,28 +5,30 @@
 
 package com.mozilla.toodle.rust;
 
+import com.mozilla.toodle.Item;
+
 public class ListManager extends RustObject {
     /* package-private */ ListManager(Toodle toodle) {
         rawPointer = JNA.INSTANCE.toodle_list(toodle.rawPointer);
     }
 
-    public void createItem(String name, long dueDate) {
+    public void createItem(Item item) {
         JNA.INSTANCE.list_manager_create_item_direct(
                 rawPointer,
-                name,
-                dueDate
+                item.name(),
+                item.dueDate()
         );
     }
 
-    public void registerChangedItemsCallback(ItemsChangedCallback callback) {
+    public void registerChangedItemsCallback(NativeItemsChangedCallback callback) {
         JNA.INSTANCE.list_manager_on_items_changed(callback);
     }
 
-    public void getAllUuids(ItemUuidsCallback callback) {
+    public void getAllUuids(NativeItemUuidsCallback callback) {
         JNA.INSTANCE.list_manager_all_uuids(rawPointer, callback);
     }
 
-    public void getAllItems(ItemsCallback callback) {
+    public void getAllItems(NativeItemsCallback callback) {
         JNA.INSTANCE.list_manager_all_items(rawPointer, callback);
     }
 

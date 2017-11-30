@@ -24,6 +24,8 @@ pub mod strings {
         r_str.to_string()
     }
 
+    // NB: this transfers ownership to a C caller; to avoid a memory leak,
+    // pointer must be returned back to Rust and reconstituted with 'from_raw'.
     pub fn string_to_c_char(r_string: String) -> *mut c_char {
         CString::new(r_string).unwrap().into_raw()
     }

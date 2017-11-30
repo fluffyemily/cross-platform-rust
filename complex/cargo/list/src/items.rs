@@ -33,15 +33,6 @@ pub struct Item {
     pub labels: Vec<Label>,
 }
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct ItemJNA {
-    pub uuid: *const c_char,
-    pub name: *const c_char,
-    // pub due_date: Option<*const time_t>,
-    // pub completion_date: Option<*const time_t>
-}
-
 impl Drop for Item {
     fn drop(&mut self) {
         println!("{:?} is being deallocated", self);

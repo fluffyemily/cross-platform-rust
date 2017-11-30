@@ -31,12 +31,12 @@ public class NewItemActivity extends AppCompatActivity {
                 final int monthDue = itemDueDate.getMonth();
                 final int dayDue = itemDueDate.getDayOfMonth();
 
-                final Item item = new Item(getApplicationContext());
+                final Item item = new Item();
 
                 item
                         .name(name)
                         .dueDate(yearDue, monthDue, dayDue)
-                        .save();
+                        .create(getApplicationContext());
 
                 finish();
             }

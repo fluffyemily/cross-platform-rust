@@ -7,6 +7,6 @@ package com.mozilla.toodle.rust;
 
 import com.sun.jna.Callback;
 
-public interface ItemsChangedCallback extends Callback {
+public interface NativeItemsChangedCallback extends Callback {
     void items();
 }
