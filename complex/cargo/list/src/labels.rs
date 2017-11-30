@@ -19,9 +19,14 @@ use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
 };
+use store::{
+    Entity,
+    ToInner
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Label {
+    pub id: Option<Entity>,    // id should not be leaked outside of the library
     pub name: String,
     pub color: String
 }
@@ -34,15 +39,10 @@ impl Drop for Label {
 
 impl Label {
     pub fn from_row(row: &Vec<TypedValue>) -> Option<Label> {
-        let label_row: Vec<String> = row.iter().filter_map(|col| {
-            match col {
-                &TypedValue::String(ref val) => Some(val.to_string()),
-                _ => None
-            }
-        }).collect();
         Some(Label {
-            name: label_row[0].to_owned(),
-            color: label_row[1].to_owned(),
+            id: row[0].clone().to_inner(),
+            name: row[1].clone().to_inner(),
+            color: row[2].clone().to_inner()
         })
     }
 }

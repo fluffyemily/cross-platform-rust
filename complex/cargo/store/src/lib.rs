@@ -74,11 +74,30 @@ impl<'a> ToTypedValue for &'a String {
     }
 }
 
-pub struct Entity {
-    id: Entid
+impl ToTypedValue for String {
+    fn to_typed_value(&self) -> Result<TypedValue, ()> {
+        Ok(TypedValue::String(Rc::new((*self).to_owned())))
+    }
 }
 
-impl<'a> ToTypedValue for &'a Entity {
+#[derive(PartialEq, Clone, Debug)]
+pub struct Entity {
+    pub id: Entid
+}
+
+impl Entity {
+    fn new(id: Entid) -> Entity {
+        Entity { id: id}
+    }
+}
+
+impl std::fmt::Display for Entity {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.id)
+    }
+}
+
+impl ToTypedValue for Entity {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
         Ok(TypedValue::Ref(self.id.clone()))
     }
@@ -112,6 +131,60 @@ impl<'a> ToTypedValue for &'a Timespec {
 impl<'a> ToTypedValue for &'a mentat_core::Uuid {
     fn to_typed_value(&self) -> Result<TypedValue, ()> {
         Ok(TypedValue::Uuid((*self).to_owned()))
+    }
+}
+
+pub trait ToInner<T> {
+    fn to_inner(self) -> T;
+}
+
+impl ToInner<Option<Entity>> for TypedValue {
+    fn to_inner(self) -> Option<Entity> {
+        match self {
+            TypedValue::Ref(r) => Some(Entity{
+                id: r.clone(),
+            }),
+            _ => None,
+        }
+    }
+}
+
+impl ToInner<Option<i64>> for TypedValue {
+    fn to_inner(self) -> Option<i64> {
+        match self {
+            TypedValue::Long(v) => Some(v),
+            _ => None,
+        }
+    }
+}
+
+impl ToInner<String> for TypedValue {
+    fn to_inner(self) -> String {
+        match self {
+            TypedValue::String(s) => s.to_string(),
+            _ => String::new(),
+        }
+    }
+}
+
+impl ToInner<Uuid> for TypedValue {
+    fn to_inner(self) -> Uuid {
+        match self {
+            TypedValue::Uuid(u) => u,
+            _ => Uuid::nil(),
+        }
+    }
+}
+
+impl ToInner<Option<Timespec>> for TypedValue {
+    fn to_inner(self) -> Option<Timespec> {
+        match self {
+            TypedValue::Instant(v) => {
+                let timestamp = v.timestamp();
+                Some(Timespec::new(timestamp, 0))
+            },
+            _ => None,
+        }
     }
 }
 

@@ -31,10 +31,14 @@ use ffi_utils::strings::{
     c_char_to_string,
 };
 use labels::Label;
+use store::{
+    Entity,
+    ToInner
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
-    pub id: Option<i64>,
+    pub id: Option<Entity>,
     pub uuid: Uuid,
     pub name: String,
     pub due_date: Option<Timespec>,
@@ -50,7 +54,7 @@ impl Drop for Item {
 
 impl Item {
     pub fn from_row(row: &Vec<TypedValue>) -> Option<Item> {
-        let mut item = Item{
+        let item = Item{
             id: row[0].clone().to_inner(),
             uuid: row[1].clone().to_inner(),
             name: row[2].clone().to_inner(),
@@ -58,51 +62,7 @@ impl Item {
             completion_date: row[4].clone().to_inner(),
             labels: vec![]
         };
-        println!("item: {:?}", item);
         Some(item)
-    }
-}
-
-trait ToInner<T> {
-    fn to_inner(self) -> T;
-}
-
-impl ToInner<Option<i64>> for TypedValue {
-    fn to_inner(self) -> Option<i64> {
-        match self {
-            TypedValue::Long(v) => Some(v),
-            _ => None,
-        }
-    }
-}
-
-impl ToInner<String> for TypedValue {
-    fn to_inner(self) -> String {
-        match self {
-            TypedValue::String(s) => s.to_string(),
-            _ => String::new(),
-        }
-    }
-}
-
-impl ToInner<Uuid> for TypedValue {
-    fn to_inner(self) -> Uuid {
-        match self {
-            TypedValue::Uuid(u) => u,
-            _ => Uuid::nil(),
-        }
-    }
-}
-
-impl ToInner<Option<Timespec>> for TypedValue {
-    fn to_inner(self) -> Option<Timespec> {
-        match self {
-            TypedValue::Instant(v) => {
-                let timestamp = v.timestamp();
-                Some(Timespec::new(timestamp, 0))
-            },
-            _ => None,
-        }
     }
 }
 
@@ -142,11 +102,9 @@ pub unsafe extern "C" fn item_get_due_date(item: *const Item) -> *mut i64 {
     let item = &*item;
     match item.due_date {
         Some(date) => {
-            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.name);
             Box::into_raw(Box::new(date.sec))
         },
         None => {
-            println!("item_get_due_date: returning null_mut for {:?}", item.name);
             ptr::null_mut()
         }
     }
@@ -168,11 +126,9 @@ pub unsafe extern "C" fn item_get_completion_date(item: *const Item) -> *mut i64
     let item = &*item;
     match item.completion_date {
         Some(date) => {
-            println!("item_get_due_date: returning {:?} for {:?}", date.sec, item.name);
             Box::into_raw(Box::new(date.sec))
         },
         None => {
-            println!("item_get_due_date: returning null_mut for {:?}", item.name);
             ptr::null_mut()
         }
     }
