@@ -9,7 +9,6 @@
 // specific language governing permissions and limitations under the License.
 
 use libc::size_t;
-use std::any::Any;
 use std::os::raw::{
     c_char,
     c_int,

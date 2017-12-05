@@ -8,10 +8,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::os::raw::{
-    c_char,
-};
-use std::rc::Rc;
+use std::os::raw::c_char;
 
 use mentat_core::TypedValue;
 

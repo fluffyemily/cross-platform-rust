@@ -23,22 +23,11 @@ extern crate ffi_utils;
 
 use libc::size_t;
 use std::os::raw::c_char;
-use std::sync::{
-    Arc,
-};
+use std::sync::Arc;
 
 use mentat::query::QueryResults;
-use mentat_core::{
-    TypedValue,
-    Uuid,
-};
-use time::{
-    at,
-    Timespec,
-    Tm,
-    TmFmt,
-};
-use uuid::UuidVersion;
+use mentat_core::Uuid;
+use time::Timespec;
 
 pub mod labels;
 pub mod items;
@@ -49,7 +38,6 @@ use ffi_utils::strings::c_char_to_string;
 use items::Item;
 use labels::Label;
 use store::{
-    Entity,
     Store,
     ToInner
 };

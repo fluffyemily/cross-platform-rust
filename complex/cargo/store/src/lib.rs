@@ -22,20 +22,15 @@ extern crate uuid;
 
 extern crate ffi_utils;
 
-use std::any::{Any, TypeId};
 use std::fmt;
 use std::os::raw::{
     c_char
 };
 use std::rc::Rc;
-use std::sync::{
-    Arc,
-};
 
 use edn::{
     DateTime,
     FromMicros,
-    ToMicros,
     Utc,
     Uuid
 };
