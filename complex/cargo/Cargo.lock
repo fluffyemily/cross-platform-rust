@@ -216,13 +216,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "list"
 version = "0.1.0"
 dependencies = [
+ "edn 0.1.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
  "ffi-utils 0.1.0",
  "jni 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mentat 0.4.0 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
+ "mentat_core 0.0.1 (git+https://github.com/mozilla/mentat.git?rev=5558820)",
  "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "store 0.1.0",
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
- "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -607,6 +611,7 @@ dependencies = [
  "ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusqlite 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -641,6 +646,7 @@ dependencies = [
 name = "toodle"
 version = "0.1.0"
 dependencies = [
+ "error-chain 0.11.0 (git+https://github.com/rnewman/error-chain?branch=rnewman/sync)",
  "ffi-utils 0.1.0",
  "list 0.1.0",
  "store 0.1.0",
@@ -689,6 +695,9 @@ dependencies = [
 name = "uuid"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "rand 0.3.17 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "vcpkg"

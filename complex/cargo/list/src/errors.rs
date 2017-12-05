@@ -10,20 +10,14 @@
 
 #![allow(dead_code)]
 
-use rusqlite;
-
-use mentat::errors as mentat;
+use store::errors as store_error;
 
 error_chain! {
     types {
         Error, ErrorKind, ResultExt, Result;
     }
 
-    foreign_links {
-        Rusqlite(rusqlite::Error);
-    }
-
     links {
-        MentatError(mentat::Error, mentat::ErrorKind);
+        StoreError(store_error::Error, store_error::ErrorKind);
     }
 }

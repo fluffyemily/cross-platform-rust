@@ -8,6 +8,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+#[macro_use] extern crate error_chain;
+
 extern crate libc;
 extern crate edn;
 extern crate mentat;
@@ -40,10 +42,12 @@ use uuid::UuidVersion;
 
 pub mod labels;
 pub mod items;
+pub mod errors;
 
-use labels::Label;
+use errors as list_errors;
 use ffi_utils::strings::c_char_to_string;
 use items::Item;
+use labels::Label;
 use store::{
     Entity,
     Store,
@@ -57,20 +61,20 @@ pub struct ListManager {
 }
 
 impl ListManager {
-    pub fn new(store: Arc<Store>) -> ListManager {
+    pub fn new(store: Arc<Store>) -> Result<ListManager, list_errors::Error> {
         let mut manager = ListManager {
             store: store,
         };
-        manager.create_labels_table();
-        manager.create_items_table();
-        manager
+        manager.create_labels_table()?;
+        manager.create_items_table()?;
+        Ok(manager)
     }
 
     fn write_connection(&mut self) -> &mut Store {
         Arc::get_mut(&mut self.store).unwrap()
     }
 
-    pub fn create_labels_table(&mut self) {
+    pub fn create_labels_table(&mut self) -> Result<(), list_errors::Error> {
         let schema = r#"[{  :db/ident     :label/name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
@@ -79,65 +83,50 @@ impl ListManager {
  {  :db/ident     :label/color
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one }]"#;
-        let _ = self.write_connection().transact(schema);
+        let _ = self.write_connection().transact(schema)?;
+        Ok(())
     }
 
-    pub fn create_label(&mut self, name: String, color: String) -> Option<Label> {
+    pub fn create_label(&mut self, name: String, color: String) -> Result<Option<Label>, list_errors::Error> {
         let query = format!("[{{ :label/name \"{0}\" :label/color \"{1}\" }}]", &name, &color);
-        let res = self.write_connection().transact(&query);
+        self.write_connection().transact(&query)?;
         self.fetch_label(&name)
     }
 
-    pub fn fetch_label(&self, name: &String) -> Option<Label> {
+    pub fn fetch_label(&self, name: &String) -> Result<Option<Label>, list_errors::Error> {
         let query = r#"[:find ?eid, ?name, ?color
             :in ?name
             :where
             [?eid :label/name ?name]
             [?eid :label/color ?color]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?name".to_string(), &name)]);
-        match result {
-            Ok(rel) => {
-                if let QueryResults::Rel(rows) = rel {
-                    if !rows.is_empty() {
-                        Label::from_row(&rows[0])
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            },
-            Err(e) => {
-                println!("Failed to fetch {}, {}", name, e);
-                None
-            },
+        let result = Arc::clone(&self.store).query_args(query, &[&(&"?name".to_string(), &name)])?;
+        if let QueryResults::Rel(rows) = result {
+            if !rows.is_empty() {
+                Ok(Label::from_row(&rows[0]))
+            } else {
+                Ok(None)
+            }
+        } else {
+            Ok(None)
         }
     }
 
-    pub fn fetch_labels(&self) -> Vec<Label> {
+    pub fn fetch_labels(&self) -> Result<Vec<Label>, list_errors::Error> {
         let query = r#"[:find ?eid, ?name, ?color
             :where
             [?eid :label/name ?name]
             [?eid :label/color ?color]
         ]"#;
-        let result = Arc::clone(&self.store).query(query);
-        match result {
-            Ok(rel) => {
-                if let QueryResults::Rel(rows) = rel {
-                    rows.iter().map(|row| Label::from_row(&row).unwrap()).collect()
-                } else {
-                    vec![]
-                }
-            },
-            Err(e) => {
-                println!("Failed to fetch labels");
-                vec![]
-            },
+        let result = Arc::clone(&self.store).query(query)?;
+        if let QueryResults::Rel(rows) = result {
+            Ok(rows.iter().map(|row| Label::from_row(&row).unwrap()).collect())
+        } else {
+            Ok(vec![])
         }
     }
 
-    pub fn fetch_labels_for_item(&self, item_uuid: &Uuid) -> Vec<Label> {
+    pub fn fetch_labels_for_item(&self, item_uuid: &Uuid) -> Result<Vec<Label>, list_errors::Error> {
         let query = r#"[:find ?l, ?name, ?color
             :in ?item_uuid
             :where
@@ -146,24 +135,16 @@ impl ListManager {
             [?i :item/labels ?l]
             [?i :item/uuid ?item_uuid]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?item_uuid".to_string(), &item_uuid)]);
-        match result {
-            Ok(rel) => {
-                if let QueryResults::Rel(rows) = rel {
-                    rows.iter().filter_map(|row| Label::from_row(&row)).collect()
-                } else {
-                    println!("no labels for item {:?}", item_uuid);
-                    vec![]
-                }
-            },
-            Err(e) => {
-                println!("Failed to fetch labels for {:?}: {}", item_uuid, e);
-                vec![]
-            },
+        let result = Arc::clone(&self.store).query_args(query, &[&(&"?item_uuid".to_string(), &item_uuid)])?;
+        if let QueryResults::Rel(rows) = result {
+            Ok(rows.iter().filter_map(|row| Label::from_row(&row)).collect())
+        } else {
+            println!("no labels for item {:?}", item_uuid);
+            Ok(vec![])
         }
     }
 
-    pub fn create_items_table(&mut self) {
+    pub fn create_items_table(&mut self) -> Result<(), list_errors::Error> {
         let schema = r#"[{  :db/ident     :item/uuid
             :db/valueType :db.type/uuid
             :db/cardinality :db.cardinality/one
@@ -182,10 +163,11 @@ impl ListManager {
         {  :db/ident     :item/labels
             :db/valueType :db.type/ref
             :db/cardinality :db.cardinality/many }]"#;
-        let _ = self.write_connection().transact(schema);
+        let _ = self.write_connection().transact(schema)?;
+        Ok(())
     }
 
-    pub fn fetch_items_with_label(&self, label: &Label) -> Vec<Item> {
+    pub fn fetch_items_with_label(&self, label: &Label) -> Result<Vec<Item>, list_errors::Error> {
         let query = r#"[:find ?uuid
             :in ?label
             :where
@@ -193,90 +175,68 @@ impl ListManager {
             [?eid :item/labels ?l]
             [?l :label/name ?label]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?label".to_string(), &label.name)]);
-        match result {
-            Ok(rel) => {
-                if let QueryResults::Rel(rows) = rel {
-                    rows.iter().filter_map(|row| {
-                        let uuid: Uuid = row[0].to_owned().to_inner();
-                        self.fetch_item(&uuid)
-                    }).collect()
-                } else {
-                    println!("no items for label {:?}", label.name);
-                    vec![]
-                }
-            },
-            Err(e) => {
-                println!("Failed to fetch items for {:?}: {}", label.name, e);
-                vec![]
-            },
+        let result = Arc::clone(&self.store).query_args(query, &[&(&"?label".to_string(), &label.name)])?;
+        if let QueryResults::Rel(rows) = result {
+            Ok(rows.iter().filter_map(|row| {
+                let uuid: Uuid = row[0].to_owned().to_inner();
+                self.fetch_item(&uuid).unwrap_or(None)
+            }).collect())
+        } else {
+            println!("no items for label {:?}", label.name);
+            Ok(vec![])
         }
     }
 
-    pub fn fetch_item(&self, uuid: &Uuid) -> Option<Item> {
+    pub fn fetch_item(&self, uuid: &Uuid) -> Result<Option<Item> , list_errors::Error>{
         let query = r#"[:find ?eid, ?uuid, ?name
             :in ?uuid
             :where
             [?eid :item/uuid ?uuid]
             [?eid :item/name ?name]
         ]"#;
-        let result = Arc::clone(&self.store).query_args(query, &[&(&"?uuid".to_string(), &uuid)]);
-        match result {
-            Ok(rel) => {
-                if let QueryResults::Rel(rows) = rel {
-                    if !rows.is_empty() {
-                        let row = &rows[0];
-                        Some(Item{
-                            id: row[0].clone().to_inner(),
-                            uuid: row[1].clone().to_inner(),
-                            name: row[2].clone().to_inner(),
-                            due_date: self.fetch_date_for_item("due_date", &uuid),
-                            completion_date: self.fetch_date_for_item("completion_date", &uuid),
-                            labels: self.fetch_labels_for_item(&uuid),
-                        })
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            },
-            Err(e) => {
-                println!("Failed to fetch {}, {}", uuid, e);
-                None
-            },
+        let result = Arc::clone(&self.store).query_args(query, &[&(&"?uuid".to_string(), &uuid)])?;
+        if let QueryResults::Rel(rows) = result {
+            if !rows.is_empty() {
+                let row = &rows[0];
+                Ok(Some(Item{
+                    id: row[0].clone().to_inner(),
+                    uuid: row[1].clone().to_inner(),
+                    name: row[2].clone().to_inner(),
+                    due_date: self.fetch_date_for_item("due_date", &uuid).unwrap_or(None),
+                    completion_date: self.fetch_date_for_item("completion_date", &uuid).unwrap_or(None),
+                    labels: self.fetch_labels_for_item(&uuid).unwrap_or(vec![]),
+                }))
+            } else {
+                Ok(None)
+            }
+        } else {
+            Ok(None)
         }
     }
 
-    fn fetch_date_for_item(&self, attr: &str, item_id: &Uuid) -> Option<Timespec> {
+    fn fetch_date_for_item(&self, attr: &str, item_id: &Uuid) -> Result<Option<Timespec>, list_errors::Error> {
         let query = format!(r#"[:find ?{0}
             :in ?uuid
             :where
             [?eid :item/{0} ?{0}]
             [?eid :item/uuid ?uuid]
         ]"#, attr);
-        let result = Arc::clone(&self.store).query_args(&query, &[&(&"?uuid".to_string(), &item_id)]);
-        match result {
-            Ok(rel) => {
-                if let QueryResults::Rel(rows) = rel {
-                    if !rows.is_empty() {
-                        let row = &rows[0];
-                        let date: Option<Timespec> = row[0].clone().to_inner();
-                        date
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            },
-            Err(e) => {
-                None
+        let result = Arc::clone(&self.store).query_args(&query, &[&(&"?uuid".to_string(), &item_id)])?;
+        if let QueryResults::Rel(rows) = result {
+            if !rows.is_empty() {
+                let row = &rows[0];
+                let date: Option<Timespec> = row[0].clone().to_inner();
+                Ok(date)
+            } else {
+                Ok(None)
             }
+        } else {
+            Ok(None)
         }
+
     }
 
-    pub fn create_item(&mut self, item: &Item) -> Uuid {
+    pub fn create_item(&mut self, item: &Item) -> Result<Uuid, list_errors::Error> {
         let label_str = item.labels.iter().filter_map(|label| {
             if label.id.is_some() {
                 Some(format!("{}",label.id.to_owned().unwrap().id))
@@ -305,16 +265,16 @@ impl ListManager {
                 "#, &query, &label_str);
         }
         query = format!("{0}}}]", &query);
-        let res = self.write_connection().transact(&query);
-        item_uuid
+        let _ = self.write_connection().transact(&query)?;
+        Ok(item_uuid)
     }
 
-    pub fn create_and_fetch_item(&mut self, item: &Item) -> Option<Item> {
-        let item_uuid = self.create_item(&item);
+    pub fn create_and_fetch_item(&mut self, item: &Item) -> Result<Option<Item>, list_errors::Error> {
+        let item_uuid = self.create_item(&item)?;
         self.fetch_item(&item_uuid)
     }
 
-    pub fn update_item(&mut self, item: &Item, name: Option<String>, due_date: Option<Timespec>, completion_date: Option<Timespec>, labels: Option<&Vec<Label>>) {
+    pub fn update_item(&mut self, item: &Item, name: Option<String>, due_date: Option<Timespec>, completion_date: Option<Timespec>, labels: Option<&Vec<Label>>) -> Result<(), list_errors::Error> {
         let item_id = item.id.to_owned().expect("item must have ID to be updated");
         let mut transaction = vec![];
 
@@ -344,7 +304,7 @@ impl ListManager {
         }
 
         if let Some(new_labels) = labels {
-            let existing_labels = self.fetch_labels_for_item(&(item.uuid));
+            let existing_labels = self.fetch_labels_for_item(&(item.uuid)).unwrap_or(vec![]);
 
             let labels_to_add = new_labels.iter().filter(|label| !existing_labels.contains(label) ).map(|label| label.name.to_owned()).collect::<Vec<String>>().join("\", \"");
             if !labels_to_add.is_empty() {
@@ -356,14 +316,15 @@ impl ListManager {
             }
         }
         let query = format!("[{0}]", transaction.join(""));
-        let res = self.write_connection().transact(&query);
+        let _ = self.write_connection().transact(&query)?;
+        Ok(())
     }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_get_all_labels(manager: *const ListManager) -> *mut Vec<Label> {
     let manager = &*manager;
-    let label_list = Box::new(manager.fetch_labels());
+    let label_list = Box::new(manager.fetch_labels().unwrap_or(vec![]));
     Box::into_raw(label_list)
 }
 
@@ -371,7 +332,7 @@ pub unsafe extern "C" fn list_manager_get_all_labels(manager: *const ListManager
 pub unsafe extern "C" fn list_manager_create_item(manager: *mut ListManager, item: *const Item) {
     let manager = &mut*manager;
     let item = &*item;
-    manager.create_item(&item);
+    let _ = manager.create_item(&item);
 }
 
 #[no_mangle]
@@ -380,27 +341,27 @@ pub unsafe extern "C" fn list_manager_update_item(manager: *mut ListManager, ite
     let item = &*item;
     let labels = &*labels;
     let name = Some(c_char_to_string(name));
-    let mut due: Option<Timespec>;
+    let due: Option<Timespec>;
     if !due_date.is_null() {
         due = Some(Timespec::new(due_date as i64, 0));
     } else {
         due = None;
     }
-    let mut completion: Option<Timespec>;
+    let completion: Option<Timespec>;
     if !completion_date.is_null() {
         completion = Some(Timespec::new(completion_date as i64, 0));
     } else {
         completion = None;
     }
-    manager.update_item(item, name, due, completion, Some(labels));
+    let _ = manager.update_item(item, name, due, completion, Some(labels));
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_create_label(manager: *mut ListManager, name: *const c_char, color: *const c_char) -> *mut Label {
+pub unsafe extern "C" fn list_manager_create_label(manager: *mut ListManager, name: *const c_char, color: *const c_char) -> *mut Option<Label> {
     let manager = &mut*manager;
     let name = c_char_to_string(name);
     let color = c_char_to_string(color);
-    let label = Box::new(manager.create_label(name, color).unwrap());
+    let label = Box::new(manager.create_label(name, color).unwrap_or(None));
     Box::into_raw(label)
 }
 

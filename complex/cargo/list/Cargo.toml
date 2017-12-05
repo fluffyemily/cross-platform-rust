@@ -7,9 +7,10 @@ authors = ["Emily Toop <etoop@mozilla.com>"]
 jni = { version = "0.5", default-features = false }
 
 [dependencies]
+error-chain = { git = "https://github.com/rnewman/error-chain", branch = "rnewman/sync" }
+libc = "0.2.32"
 time = "0.1.38"
 uuid = { version = "0.5", features = ["v4"] }
-libc = "0.2.32"
 
 [dependencies.edn]
 git = "https://github.com/mozilla/mentat.git"

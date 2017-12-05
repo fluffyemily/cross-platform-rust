@@ -141,9 +141,7 @@ pub trait ToInner<T> {
 impl ToInner<Option<Entity>> for TypedValue {
     fn to_inner(self) -> Option<Entity> {
         match self {
-            TypedValue::Ref(r) => Some(Entity{
-                id: r.clone(),
-            }),
+            TypedValue::Ref(r) => Some(Entity::new(r.clone())),
             _ => None,
         }
     }
@@ -241,7 +239,6 @@ impl Store {
             ee.push((Variable::from_valid_name(&arg), val.to_typed_value().ok().unwrap()));
         }
         let i = QueryInputs::with_value_sequence(ee);
-        // convert inputs to QueryInputs
         Ok(self.conn.q_once(&self.handle, query, i)?)
     }
 
