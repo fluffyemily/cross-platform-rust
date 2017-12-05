@@ -120,7 +120,7 @@ impl ListManager {
             :where
             [?l :label/name ?name]
             [?l :label/color ?color]
-            [?i :item/labels ?l]
+            [?i :item/label ?l]
             [?i :item/uuid ?item_uuid]
         ]"#;
         let result = Arc::clone(&self.store).query_args(query, &[&(&"?item_uuid".to_string(), &item_uuid)])?;
@@ -133,23 +133,24 @@ impl ListManager {
     }
 
     pub fn create_items_table(&mut self) -> Result<(), list_errors::Error> {
-        let schema = r#"[{  :db/ident     :item/uuid
-            :db/valueType :db.type/uuid
+        let schema = r#"[
+        {   :db/ident       :item/uuid
+            :db/valueType   :db.type/uuid
             :db/cardinality :db.cardinality/one
-            :db/unique :db.unique/value
+            :db/unique      :db.unique/value
             :db/index true },
-        {  :db/ident     :item/name
-            :db/valueType :db.type/string
+        {   :db/ident       :item/name
+            :db/valueType   :db.type/string
             :db/cardinality :db.cardinality/one
-            :db/fulltext true  },
-        {  :db/ident     :item/due_date
-            :db/valueType :db.type/instant
+            :db/fulltext    true  },
+        {   :db/ident       :item/due_date
+            :db/valueType   :db.type/instant
             :db/cardinality :db.cardinality/one  },
-        {  :db/ident     :item/completion_date
-            :db/valueType :db.type/instant
+        {   :db/ident       :item/completion_date
+            :db/valueType   :db.type/instant
             :db/cardinality :db.cardinality/one  },
-        {  :db/ident     :item/labels
-            :db/valueType :db.type/ref
+        {   :db/ident       :item/label
+            :db/valueType   :db.type/ref
             :db/cardinality :db.cardinality/many }]"#;
         let _ = self.write_connection().transact(schema)?;
         Ok(())
@@ -160,7 +161,7 @@ impl ListManager {
             :in ?label
             :where
             [?eid :item/uuid ?uuid]
-            [?eid :item/labels ?l]
+            [?eid :item/label ?l]
             [?l :label/name ?label]
         ]"#;
         let result = Arc::clone(&self.store).query_args(query, &[&(&"?label".to_string(), &label.name)])?;
@@ -249,7 +250,7 @@ impl ListManager {
                 "#, &query, &micro_seconds);
         }
         if !label_str.is_empty() {
-            query = format!(r#"{0}:item/labels [{1}]
+            query = format!(r#"{0}:item/label [{1}]
                 "#, &query, &label_str);
         }
         query = format!("{0}}}]", &query);
@@ -299,14 +300,14 @@ impl ListManager {
                 format!("{}", label_id)
             }).collect::<Vec<String>>().join(", ");
             if !labels_to_add.is_empty() {
-                transaction.push(format!("[:db/add {0} :item/labels [{1}]]", &item_id.id, labels_to_add));
+                transaction.push(format!("[:db/add {0} :item/label [{1}]]", &item_id.id, labels_to_add));
             }
             let labels_to_remove = existing_labels.iter().filter(|label| !new_labels.contains(label) ).map(|label| {
                 let label_id = label.id.to_owned().unwrap().id;
                 format!("{}", label_id)
             }).collect::<Vec<String>>().join(", ");
             if !labels_to_remove.is_empty() {
-                transaction.push(format!("[:db/retract {0} :item/labels [{1}]]", &item_id.id, labels_to_remove));
+                transaction.push(format!("[:db/retract {0} :item/label [{1}]]", &item_id.id, labels_to_remove));
             }
         }
         let query = format!("[{0}]", transaction.join(""));
