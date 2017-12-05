@@ -8,6 +8,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+#[macro_use] extern crate error_chain;
 extern crate ffi_utils;
 extern crate store;
 extern crate list;
@@ -19,6 +20,8 @@ use std::sync::{
     Arc,
 };
 
+mod errors;
+
 use ffi_utils::strings::c_char_to_string;
 use list::ListManager;
 use store::Store;
@@ -29,19 +32,20 @@ pub struct Toodle {
 }
 
 impl Toodle {
-    fn new(uri: String) -> Toodle {
-        let store = Arc::new(Store::new(uri));
-        Toodle {
-            store: store.clone(),
-            list: Arc::new(ListManager::new(store.clone()))
-        }
+    fn new(uri: String) -> Result<Toodle, errors::Error> {
+        let store = Arc::new(Store::new(uri)?);
+        Ok(Toodle {
+            store: Arc::clone(&store),
+            list: Arc::new(ListManager::new(Arc::clone(&store))?)
+        })
     }
 }
 
 #[no_mangle]
 pub extern "C" fn new_toodle(uri: *const c_char) -> *mut Toodle {
     let uri = c_char_to_string(uri);
-    Box::into_raw(Box::new(Toodle::new(uri)))
+    let toodle = Toodle::new(uri).expect("expected a toodle");
+    Box::into_raw(Box::new(toodle))
 }
 
 #[no_mangle]

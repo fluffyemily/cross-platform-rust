@@ -8,17 +8,22 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::os::raw::{
-    c_char,
-};
+use std::os::raw::c_char;
+
+use mentat_core::TypedValue;
 
 use ffi_utils::strings::{
     string_to_c_char,
     c_char_to_string,
 };
+use store::{
+    Entity,
+    ToInner
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Label {
+    pub id: Option<Entity>,    // id should not be leaked outside of the library
     pub name: String,
     pub color: String
 }
@@ -26,6 +31,16 @@ pub struct Label {
 impl Drop for Label {
     fn drop(&mut self) {
         println!("{:?} is being deallocated", self);
+    }
+}
+
+impl Label {
+    pub fn from_row(row: &Vec<TypedValue>) -> Option<Label> {
+        Some(Label {
+            id: row[0].clone().to_inner(),
+            name: row[1].clone().to_inner(),
+            color: row[2].clone().to_inner()
+        })
     }
 }
 
