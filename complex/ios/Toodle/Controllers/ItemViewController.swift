@@ -221,8 +221,10 @@ class ItemViewController: UIViewController {
         let labels: [Label] = []
 
         guard let currentItem = self.item else {
-            let newItem = ToodleLib.sharedInstance.list.createItem(withName: description, dueDate: dueDate, completionDate: nil, labels: labels)
-            return (self.delegate?.itemSaveSuccess(item: newItem))!
+            if let newItem = ToodleLib.sharedInstance.list.createItem(withName: description, dueDate: dueDate, completionDate: nil, labels: labels) {
+                self.delegate?.itemSaveSuccess(item: newItem)
+            }
+            return
         }
 
         ToodleLib.sharedInstance.list.update(item: currentItem, name: description, dueDate: dueDate, completionDate: nil, labels: labels)
