@@ -49,16 +49,16 @@ class ListManager: RustObject {
         return Label(raw: label_new(self.raw, name, color.toHex()!))
     }
 
-    func createItem(withName name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) -> Item {
+    func createItem(withName name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) -> Item? {
         var dd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
         if let due = dueDate{
             var d = due.asInt64Timestamp()
-            dd = AutoreleasingUnsafeMutablePointer<Int64>?(&d)
+            dd = AutoreleasingUnsafeMutablePointer<Int64>(&d)
         }
         var cd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
         if let completion = completionDate {
             var c = completion.asInt64Timestamp()
-            cd = AutoreleasingUnsafeMutablePointer<Int64>?(&c)
+            cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
         }
         var pointerArray = self.toPointerArray(list: labels as [RustObject])
         return Item(raw: list_manager_create_item(self.raw,
@@ -72,12 +72,12 @@ class ListManager: RustObject {
         var dd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
         if let due = dueDate{
             var d = due.asInt64Timestamp()
-            dd = AutoreleasingUnsafeMutablePointer<Int64>?(&d)
+            dd = AutoreleasingUnsafeMutablePointer<Int64>(&d)
         }
         var cd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
         if let completion = completionDate {
             var c = completion.asInt64Timestamp()
-            cd = AutoreleasingUnsafeMutablePointer<Int64>?(&c)
+            cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
         }
         var pointerArray = self.toPointerArray(list: labels as [RustObject])
         list_manager_update_item(raw,
