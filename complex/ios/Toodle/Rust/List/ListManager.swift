@@ -26,27 +26,27 @@ class ListManager: RustObject {
     }
 
     func allItems() -> [Item] {
-        let items = get_all_items(self.raw)
+        let items = list_manager_get_all_items(self.raw)
         var allItems: [Item] = []
         for index in 0..<item_list_count(items) {
-            let item = Item(raw: item_list_item_at(items, index)!)
+            let item = Item(raw: item_list_entry_at(items, index)!)
             allItems.append(item)
         }
         return allItems
     }
 
     func allLabels() -> [Label] {
-        let labels = get_all_labels(self.raw)
+        let labels = list_manager_get_all_labels(self.raw)
         var allLabels: [Label] = []
         for index in 0..<label_list_count(labels) {
-            let label = Label(raw: label_list_item_at(labels, index))
+            let label = Label(raw: label_list_entry_at(labels, index))
             allLabels.append(label)
         }
         return allLabels
     }
 
     func createLabel(withName name: String, color: UIColor) -> Label {
-        return Label(raw: label_new(self.raw, name, color.toHex()!))
+        return Label(raw: list_manager_create_label(self.raw, name, color.toHex()!))
     }
 
     func createItem(withName name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) -> Item? {

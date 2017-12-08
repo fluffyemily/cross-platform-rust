@@ -19,6 +19,8 @@ use std::os::raw::c_char;
 use std::sync::{
     Arc,
 };
+
+use libc::c_int;
 use uuid::Uuid;
 
 pub mod labels;
@@ -159,6 +161,31 @@ impl ListManager {
         }
     }
 
+    pub fn fetch_items(&mut self) -> Vec<Item> {
+        let sql = r#"SELECT uuid, name, due_date, completion_date
+                     FROM items"#;
+        let conn = self.get_store().get_conn();
+        let mut stmt = conn.prepare(sql).unwrap();
+        let mut item_iter = stmt.query_map(&[], |row| {
+            let uuid: String = row.get(0);
+            Item {
+                uuid: uuid.clone(),
+                name: row.get(1),
+                due_date: row.get(2),
+                completion_date: row.get(3),
+                labels: self.fetch_labels_for_item(&uuid)
+            }
+        }).unwrap();
+
+        let mut item_list: Vec<Item> = Vec::new();
+        while let Some(result) = item_iter.next() {
+            if let Some(i) = result.ok() {
+                item_list.push(i);
+            }
+        }
+        item_list
+    }
+
     pub fn fetch_items_with_label(&mut self, label: &Label) -> Vec<Item> {
         let sql = r#"SELECT uuid, name, due_date, completion_date
                      FROM items JOIN item_labels on items.uuid=item_labels.item_uuid
@@ -252,12 +279,25 @@ fn create_and_fetch_item(manager: &mut ListManager, item: &Item) -> Option<Item>
     manager.fetch_item(&item_uuid)
 }
 
-
 #[no_mangle]
 pub unsafe extern "C" fn list_manager_get_all_labels(manager: *mut Arc<ListManager>) -> *mut Vec<Label> {
     let manager = Arc::get_mut(&mut *manager).unwrap();
     let label_list = Box::new(manager.fetch_labels());
     Box::into_raw(label_list)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn label_list_count(label_list: *const Vec<Label>) -> c_int {
+    let label_list = &*label_list;
+    label_list.len() as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn label_list_entry_at(label_list: *const Vec<Label>, index: c_int) -> *const Label {
+    let label_list = &*label_list;
+    let index = index as usize;
+    let label = Box::new(label_list[index].clone());
+    Box::into_raw(label)
 }
 
 #[no_mangle]
@@ -273,6 +313,28 @@ pub unsafe extern "C" fn list_manager_update_item(manager: *mut Arc<ListManager>
     let item = &*item;
     let existing_labels = manager.fetch_labels_for_item(&(item.uuid));
     manager.update_item(item, existing_labels)
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn list_manager_get_all_items(manager: *mut Arc<ListManager>) -> *mut Vec<Item> {
+    let manager = Arc::get_mut(&mut *manager).unwrap();
+    let item_list = Box::new(manager.fetch_items());
+    Box::into_raw(item_list)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn item_list_count(item_list: *const Vec<Item>) -> c_int {
+    let item_list = &*item_list;
+    item_list.len() as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn item_list_entry_at(item_list: *const Vec<Item>, index: c_int) -> *const Item {
+    let item_list = &*item_list;
+    let index = index as usize;
+    let item = Box::new(item_list[index].clone());
+    Box::into_raw(item)
 }
 
 #[no_mangle]
