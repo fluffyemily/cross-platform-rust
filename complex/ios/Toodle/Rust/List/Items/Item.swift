@@ -5,35 +5,31 @@
 import Foundation
 
 class Item: RustObject {
-    let raw: OpaquePointer
+    var raw: OpaquePointer
 
     required init(raw: OpaquePointer) {
         self.raw = raw
     }
 
-    init() {
-        self.raw = item_new()
+    func intoRaw() -> OpaquePointer {
+        return self.raw
     }
 
     deinit {
         item_destroy(raw)
     }
 
-    var id: Int? {
-        return item_get_id(raw)?.pointee
+    var uuid: String {
+        return String(cString: item_get_uuid(raw))
     }
 
-    var description: String {
+    var name: String {
         get {
-            return String(cString: item_get_description(raw))
+            return String(cString: item_get_name(raw))
         }
         set {
-            item_set_description(raw, newValue)
+            item_set_name(raw, newValue)
         }
-    }
-
-    var createdAt: Date {
-        return Date(timeIntervalSinceReferenceDate: Double(item_get_created_at(raw)))
     }
 
     var dueDate: Date? {
@@ -45,17 +41,46 @@ class Item: RustObject {
         }
         set {
             if let d = newValue {
-                item_set_due_date(raw, Int64(d.timeIntervalSince1970))
+                let timestamp = d.timeIntervalSince1970
+                var date = Int64(timestamp)
+                item_set_due_date(raw, AutoreleasingUnsafeMutablePointer<Int64>(&date))
             }
         }
     }
 
-    var isComplete: Bool {
+    var completionDate: Date? {
         get {
-            return item_get_is_complete(raw) != 0
+            guard let date = item_get_completion_date(raw) else {
+                return nil
+            }
+            return Date(timeIntervalSince1970: Double(date.pointee))
         }
         set {
-            item_set_is_complete(raw, newValue ? 1 : 0)
+            if let d = newValue {
+                let timestamp = d.timeIntervalSince1970
+                var date = Int64(timestamp)
+                item_set_completion_date(raw, AutoreleasingUnsafeMutablePointer<Int64>(&date))
+            }
+        }
+    }
+
+    fileprivate var _labels: [Label]?
+
+    var labels: [Label] {
+        get {
+            if _labels == nil {
+                let ls = item_get_labels(self.raw)
+                _labels = []
+                for index in 0..<item_labels_count(ls) {
+                    let label = Label(raw: item_label_at(ls, index)!)
+                    _labels?.append(label)
+                }
+            }
+
+            return _labels!
+        }
+        set {
+            _labels = nil
         }
     }
 

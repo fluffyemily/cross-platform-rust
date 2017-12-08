@@ -10,10 +10,10 @@ protocol ToDoListItemsViewControllerDelegate {
 
 class ToDoListItemsTableViewController: UITableViewController {
 
-    var category: Category
+    var items: [Item]
 
-    init(category: Category) {
-        self.category = category
+    init(items: [Item]) {
+        self.items = items
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -24,7 +24,7 @@ class ToDoListItemsTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.title = category.name
+        self.title = "All Items"
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newItem))
     }
 
@@ -42,29 +42,28 @@ class ToDoListItemsTableViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return category.items.count
+        return self.items.count
     }
 
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "ItemCell")
-        let item = self.category.items[indexPath.row]
-        cell.textLabel?.text = item.description
+        let item = self.items[indexPath.row]
+        cell.textLabel?.text = item.name
         cell.detailTextLabel?.text = item.dueDateAsString()
-        // Configure the cell...
 
         return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let item = self.category.items[indexPath.row]
-        let itemVC = ItemViewController(item: item, category: self.category)
+        let item = self.items[indexPath.row]
+        let itemVC = ItemViewController(item: item)
         itemVC.delegate = self
         self.navigationController?.pushViewController(itemVC, animated: true)
     }
 
     @objc fileprivate func newItem() {
-        let itemVC = ItemViewController(category: self.category)
+        let itemVC = ItemViewController()
         itemVC.delegate = self
         let navController = UINavigationController(rootViewController: itemVC)
         self.present(navController, animated: true, completion: nil)
@@ -74,8 +73,8 @@ class ToDoListItemsTableViewController: UITableViewController {
 
 extension ToDoListItemsTableViewController: ToDoListItemsViewControllerDelegate {
     func itemSaveSuccess(item: Item) {
-        if !self.category.items.contains(where: {  $0.id == item.id }) {
-            self.category.add_item(item: item)
+        if !self.items.contains(where: {  $0.uuid == item.uuid }) {
+            self.items.append(item)
         }
         self.tableView.reloadData()
     }
