@@ -16,11 +16,19 @@ extern crate store;
 extern crate ffi_utils;
 
 use std::os::raw::c_char;
+use std::ops::Deref;
 use std::sync::{
     Arc,
 };
 
-use libc::c_int;
+use libc::{
+    c_int,
+    size_t,
+};
+use rusqlite::{
+    Connection
+};
+use time::Timespec;
 use uuid::Uuid;
 
 pub mod labels;
@@ -32,16 +40,17 @@ use items::Item;
 use store::Store;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct ListManager {
     store: Arc<Store>,
 }
 
 impl ListManager {
-    pub fn new(store: Arc<Store>) -> ListManager {
+    pub fn new<T>(uri: T) -> Self
+    where T: Into<Option<String>> {
         let mut manager = ListManager {
-            store: store,
+            store: Arc::new(Store::new(uri)),
         };
         manager.create_labels_table();
         manager.create_items_table();
@@ -54,7 +63,7 @@ impl ListManager {
     }
 
     fn get_store_mut(&mut self) -> &mut Store {
-        Arc::get_mut(&mut self.store).unwrap()
+        Arc::make_mut(&mut self.store)
     }
 
     pub fn create_labels_table(&mut self) {
@@ -62,13 +71,15 @@ impl ListManager {
                 name TEXT NOT NULL PRIMARY KEY,
                 color TEXT NOT NULL
             )"#;
-        let s = self.get_store_mut();
-        let db = s.get_conn_mut();
-        db.execute(sql, &[]).unwrap();
+        let db = self.get_store_mut().conn.lock().unwrap();
+        let r = db.execute(sql, &[]);
+        if r.is_err() {
+            println!("failed to create labels table {:?}", r.err());
+        }
     }
 
     pub fn create_label(&self, name: String, color: String) -> Option<Label> {
-        let db = self.get_store().get_conn();
+        let db = self.store.conn.lock().unwrap();
         let sql = r#"INSERT INTO labels (name, color) VALUES (?1, ?2)"#;
         db.execute(sql, &[&name, &color]).unwrap();
         self.fetch_label(&name)
@@ -77,7 +88,7 @@ impl ListManager {
     pub fn fetch_label(&self, name: &String) -> Option<Label> {
         let sql = r#"SELECT name, color FROM labels WHERE name=?"#;
 
-        let conn = self.get_store().get_conn();
+        let conn = self.store.conn.lock().unwrap();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[name], |row| {
             Label {
@@ -97,7 +108,7 @@ impl ListManager {
     pub fn fetch_labels(&self) -> Vec<Label> {
         let sql = r#"SELECT name, color
                      FROM labels"#;
-        let conn = self.get_store().get_conn();
+        let conn = self.store.conn.lock().unwrap();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[], |row| {
             Label {
@@ -115,11 +126,15 @@ impl ListManager {
         label_list
     }
 
-    pub fn fetch_labels_for_item(&mut self, item_uuid: &String) -> Vec<Label> {
+    pub fn fetch_labels_for_item(&self, item_uuid: &String) -> Vec<Label> {
+        let db = self.store.conn.lock().unwrap();
+        self.fetch_labels_for_item_with_conn(db.deref(), item_uuid)
+    }
+
+    pub fn fetch_labels_for_item_with_conn(&self, conn: &Connection, item_uuid: &String) -> Vec<Label> {
         let sql = r#"SELECT name, color
                      FROM labels JOIN item_labels on item_labels.label_name=labels.name
                      WHERE item_labels.item_uuid=?"#;
-        let conn = self.get_store().get_conn();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut label_iter = stmt.query_map(&[item_uuid], |row| {
             Label {
@@ -144,8 +159,11 @@ impl ListManager {
                 due_date DATETIME,
                 completion_date DATETIME
             )"#;
-        let db = self.get_store_mut().get_conn_mut();
-        db.execute(sql, &[]).unwrap();
+        let db = self.store.conn.lock().unwrap();
+        let r = db.execute(sql, &[]);
+        if r.is_err() {
+            println!("failed to create items table {:?}", r.err());
+        }
     }
 
     pub fn create_item_labels_table(&mut self) {
@@ -154,7 +172,7 @@ impl ListManager {
                 label_name TEXT NOT NULL,
                 PRIMARY KEY(item_uuid, label_name)
             )"#;
-        let db = self.get_store_mut().get_conn_mut();
+        let db = self.store.conn.lock().unwrap();
         let r = db.execute(sql, &[]);
         if r.is_err() {
             println!("failed to create item_labels table {:?}", r.err());
@@ -164,18 +182,22 @@ impl ListManager {
     pub fn fetch_items(&mut self) -> Vec<Item> {
         let sql = r#"SELECT uuid, name, due_date, completion_date
                      FROM items"#;
-        let conn = self.get_store().get_conn();
+        let conn = self.store.conn.lock().unwrap();
+        println!("got connection");
         let mut stmt = conn.prepare(sql).unwrap();
+        println!("got statement");
         let mut item_iter = stmt.query_map(&[], |row| {
             let uuid: String = row.get(0);
+            println!("Found item {}", uuid);
             Item {
                 uuid: uuid.clone(),
                 name: row.get(1),
                 due_date: row.get(2),
                 completion_date: row.get(3),
-                labels: self.fetch_labels_for_item(&uuid)
+                labels: self.fetch_labels_for_item_with_conn(conn.deref(), &uuid)
             }
         }).unwrap();
+        println!("creating item list");
 
         let mut item_list: Vec<Item> = Vec::new();
         while let Some(result) = item_iter.next() {
@@ -183,6 +205,7 @@ impl ListManager {
                 item_list.push(i);
             }
         }
+        println!("returning item list {:?}", item_list);
         item_list
     }
 
@@ -190,7 +213,7 @@ impl ListManager {
         let sql = r#"SELECT uuid, name, due_date, completion_date
                      FROM items JOIN item_labels on items.uuid=item_labels.item_uuid
                      WHERE item_labels.label_name=?"#;
-        let conn = self.get_store().get_conn();
+        let conn = self.store.conn.lock().unwrap();
         let mut stmt = conn.prepare(sql).unwrap();
         let mut item_iter = stmt.query_map(&[&label.name], |row| {
             let uuid: String = row.get(0);
@@ -199,7 +222,7 @@ impl ListManager {
                 name: row.get(1),
                 due_date: row.get(2),
                 completion_date: row.get(3),
-                labels: self.fetch_labels_for_item(&uuid)
+                labels: self.fetch_labels_for_item_with_conn(conn.deref(), &uuid)
             }
         }).unwrap();
 
@@ -215,15 +238,16 @@ impl ListManager {
     pub fn fetch_item(&mut self, uuid: &String) -> Option<Item> {
         let sql = r#"SELECT uuid, name, due_date, completion_date FROM items WHERE uuid=?"#;
 
-        let conn = self.get_store().get_conn();
+        let conn = self.store.conn.lock().unwrap();
         let mut stmt = conn.prepare(sql).unwrap();
+        let s = &self;
         let mut item_iter = stmt.query_map(&[uuid], |row| {
             Item {
                 uuid: row.get(0),
                 name: row.get(1),
                 due_date: row.get(2),
                 completion_date: row.get(3),
-                labels: self.fetch_labels_for_item(uuid)
+                labels: s.fetch_labels_for_item_with_conn(conn.deref(), uuid)
             }
         }).unwrap();
 
@@ -235,15 +259,23 @@ impl ListManager {
         }
     }
 
-    pub fn create_item(&mut self, item: &Item) -> String {
+    pub fn create_item(&mut self, name: &String, due_date: &Option<Timespec>, completion_date: &Option<Timespec>, labels: &Vec<Label>) -> String {
+        println!("create item");
         let item_sql = r#"INSERT INTO items (uuid, name, due_date, completion_date) VALUES (?, ?, ?, ?)"#;
-        let conn = self.get_store_mut().get_conn_mut();
+        let mut store = self.get_store_mut();
+        let mut conn = store.conn.lock().unwrap();
         let tx = conn.transaction().expect("expected a transaction");
         let item_uuid = Uuid::new_v4().simple().to_string();
-        let _ = tx.execute(item_sql, &[&item_uuid, &item.name, &item.due_date, &item.completion_date]);
-
+        println!("item uuid {:?}", item_uuid);
+        println!("item name {:?}", name);
+        println!("item due_date {:?}", due_date);
+        println!("item completion date {:?}", completion_date);
+        let _ = tx.execute(item_sql, &[&item_uuid, name, due_date, completion_date]);
+        println!("creating labels");
         let item_label_sql = r#"INSERT INTO item_labels (item_uuid, label_name) VALUES (?, ?)"#;
-        for label in item.labels.iter() {
+        println!("item labels {:?}", labels);
+        for label in labels.iter() {
+            println!("creating label {:?}", label);
             tx.execute(&item_label_sql, &[&item_uuid, &label.name]).unwrap();
         }
         let _ = tx.commit();
@@ -252,7 +284,8 @@ impl ListManager {
 
     pub fn update_item(&mut self, item: &Item, existing_labels: Vec<Label>) {
         let sql = r#"UPDATE items SET name=?, due_date=?, completion_date=? WHERE uuid=?"#;
-        let conn = self.get_store_mut().get_conn_mut();
+        let mut store = self.get_store_mut();
+        let mut conn = store.conn.lock().unwrap();
         let tx = conn.transaction().expect("expected a transaction");
         let _ = tx.execute(sql, &[&item.name, &item.due_date, &item.completion_date, &item.uuid]);
 
@@ -274,14 +307,17 @@ impl ListManager {
     }
 }
 
-fn create_and_fetch_item(manager: &mut ListManager, item: &Item) -> Option<Item> {
-    let item_uuid = manager.create_item(item);
+fn create_and_fetch_item(manager: &mut ListManager, name: &String, due_date: &Option<Timespec>, completion_date: &Option<Timespec>, labels: &Vec<Label>) -> Option<Item> {
+    println!("Creating item");
+    let l = vec![];
+    let item_uuid = manager.create_item(name, due_date, completion_date, &l);
+    println!("fetching item {:?}", item_uuid);
     manager.fetch_item(&item_uuid)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_get_all_labels(manager: *mut Arc<ListManager>) -> *mut Vec<Label> {
-    let manager = Arc::get_mut(&mut *manager).unwrap();
+pub unsafe extern "C" fn list_manager_get_all_labels(manager: *mut ListManager) -> *mut Vec<Label> {
+    let manager = &mut *manager;
     let label_list = Box::new(manager.fetch_labels());
     Box::into_raw(label_list)
 }
@@ -301,15 +337,34 @@ pub unsafe extern "C" fn label_list_entry_at(label_list: *const Vec<Label>, inde
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_create_item(manager: *mut Arc<ListManager>, item: *const Item) {
-    let manager = Arc::get_mut(&mut *manager).unwrap();
-    let item = &*item;
-    create_and_fetch_item(manager, &item);
+pub unsafe extern "C" fn list_manager_create_item(manager: *mut ListManager, name: *const c_char, due_date: *const size_t, completion_date: *const size_t, label_list: *const Vec<Label>) -> *mut Option<Item> {
+    let manager = &mut *manager;
+    let due: Option<Timespec>;
+    if !due_date.is_null() {
+        let due_date = *due_date as i64;
+        println!("Due date is not null {}", due_date);
+        due = Some(Timespec::new(due_date, 0));
+    } else {
+        println!("Due date is not null");
+        due = None;
+    }
+    println!("Due date is not null {:?}", due);
+    let completion: Option<Timespec>;
+    if !completion_date.is_null() {
+        let completion_date = *completion_date as i64;
+        completion = Some(Timespec::new(completion_date, 0));
+    } else {
+        completion = None;
+    }
+    let labels = &*label_list;
+    let name = c_char_to_string(name);
+    println!("creating temp item object");
+    Box::into_raw(Box::new(create_and_fetch_item(manager, &name, &due, &completion, labels)))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_update_item(manager: *mut Arc<ListManager>, item: *const Item) {
-    let manager = Arc::get_mut(&mut *manager).unwrap();
+pub unsafe extern "C" fn list_manager_update_item(manager: *mut ListManager, item: *const Item) {
+    let manager = &mut *manager;
     let item = &*item;
     let existing_labels = manager.fetch_labels_for_item(&(item.uuid));
     manager.update_item(item, existing_labels)
@@ -317,8 +372,8 @@ pub unsafe extern "C" fn list_manager_update_item(manager: *mut Arc<ListManager>
 
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_get_all_items(manager: *mut Arc<ListManager>) -> *mut Vec<Item> {
-    let manager = Arc::get_mut(&mut *manager).unwrap();
+pub unsafe extern "C" fn list_manager_get_all_items(manager: *mut ListManager) -> *mut Vec<Item> {
+    let manager = &mut *manager;
     let item_list = Box::new(manager.fetch_items());
     Box::into_raw(item_list)
 }
@@ -338,8 +393,8 @@ pub unsafe extern "C" fn item_list_entry_at(item_list: *const Vec<Item>, index: 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn list_manager_create_label(manager: *mut Arc<ListManager>, name: *const c_char, color: *const c_char) -> *mut Label {
-    let manager = Arc::get_mut(&mut *manager).unwrap();
+pub unsafe extern "C" fn list_manager_create_label(manager: *mut ListManager, name: *const c_char, color: *const c_char) -> *mut Label {
+    let manager = &mut *manager;
     let name = c_char_to_string(name);
     let color = c_char_to_string(color);
     let label = Box::new(manager.create_label(name, color).unwrap());
@@ -362,15 +417,14 @@ mod test {
     use time::now_utc;
 
     fn list_manager() -> ListManager {
-        let store = Arc::new(Store::new(None));
-        ListManager::new(store)
+        ListManager::new(None)
     }
 
     #[test]
     fn test_new_list_manager() {
         let manager = list_manager();
         let sql = r#"SELECT count(name) FROM sqlite_master WHERE type='table' AND name=?"#;
-        let conn = manager.get_store().get_conn();
+        let conn = *manager.get_store().conn.lock().unwrap();
         // test that items table has been created
         let mut stmt = conn.prepare(sql).unwrap();
         let tables = [&"items", &"labels", &"item_labels"];

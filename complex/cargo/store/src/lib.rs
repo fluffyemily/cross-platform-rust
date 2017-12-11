@@ -14,9 +14,8 @@ extern crate ffi_utils;
 use std::os::raw::{
     c_char
 };
-use std::sync::{
-    Arc,
-};
+use std::rc::Rc;
+use std::sync::{Mutex, MutexGuard};
 
 use rusqlite::{
     Connection
@@ -24,11 +23,11 @@ use rusqlite::{
 
 use ffi_utils::strings::c_char_to_string;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 /// Store containing a SQLite connection
 pub struct Store {
-    conn: Arc<Connection>,
+    pub conn: Rc<Mutex<Connection>>,
     uri: Option<String>,
 }
 
@@ -47,24 +46,16 @@ impl Store {
             &None => Connection::open_in_memory().expect("Expected an in memory connection"),
         };
         Store {
-            conn: Arc::new(c),
+            conn: Rc::new(Mutex::new(c)),
             uri: uri_string,
         }
-    }
-
-    pub fn get_conn_mut(&mut self) -> &mut Connection {
-        Arc::get_mut(&mut self.conn).unwrap()
-    }
-
-    pub fn get_conn(&self) -> Arc<Connection> {
-        Arc::clone(&self.conn)
     }
 }
 
 #[no_mangle]
-pub extern "C" fn new_store(uri: *const c_char) -> *mut Arc<Store> {
+pub extern "C" fn new_store(uri: *const c_char) -> *mut Store {
     let uri = c_char_to_string(uri);
-    let store = Arc::new(Store::new(Some(uri)));
+    let store = Store::new(Some(uri));
     Box::into_raw(Box::new(store))
 }
 

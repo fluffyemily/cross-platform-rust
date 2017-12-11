@@ -24,16 +24,13 @@ use list::ListManager;
 use store::Store;
 
 pub struct Toodle {
-    store: Arc<Store>,
-    list: Arc<ListManager>
+    list: ListManager
 }
 
 impl Toodle {
     fn new(uri: String) -> Toodle {
-        let store = Arc::new(Store::new(uri));
         Toodle {
-            store: store.clone(),
-            list: Arc::new(ListManager::new(store.clone()))
+            list: ListManager::new(uri)
         }
     }
 }
@@ -50,7 +47,8 @@ pub unsafe extern "C" fn toodle_destroy(toodle: *mut Toodle) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn toodle_list(toodle: *mut Toodle) -> *mut Arc<ListManager> {
+pub unsafe extern "C" fn toodle_list(toodle: *mut Toodle) -> *mut ListManager {
     let toodle = &*toodle;
+    println!("fetching list manager");
     Box::into_raw(Box::new(toodle.list.clone()))
 }

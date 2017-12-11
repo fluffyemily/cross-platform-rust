@@ -5,24 +5,18 @@
 import UIKit
 
 protocol ToDoListItemsViewControllerDelegate {
-    func itemSaveSuccess(item: Item)
+    func itemCreated(item: Item)
+    func itemUpdated(item: Item)
 }
 
 class ToDoListItemsTableViewController: UITableViewController {
 
-    var items: [Item]
-
-    init(items: [Item]) {
-        self.items = items
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    var items: [Item]!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.items = ToodleLib.sharedInstance.list.allItems()
 
         self.title = "All Items"
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newItem))
@@ -30,18 +24,15 @@ class ToDoListItemsTableViewController: UITableViewController {
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
         return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
         return self.items.count
     }
 
@@ -72,10 +63,17 @@ class ToDoListItemsTableViewController: UITableViewController {
 }
 
 extension ToDoListItemsTableViewController: ToDoListItemsViewControllerDelegate {
-    func itemSaveSuccess(item: Item) {
-        if !self.items.contains(where: {  $0.uuid == item.uuid }) {
-            self.items.append(item)
+    func itemCreated(item: Item) {
+        self.items.append(item)
+        self.tableView.reloadData()
+    }
+
+    func itemUpdated(item: Item) {
+        guard let index = self.items.index(where: { i in item.uuid == i.uuid }) else {
+            return itemCreated(item: item)
         }
+        self.items[index] = item
+        self.items = ToodleLib.sharedInstance.list.allItems()
         self.tableView.reloadData()
     }
 }

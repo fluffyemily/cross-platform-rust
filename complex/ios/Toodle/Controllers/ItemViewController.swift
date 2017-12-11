@@ -221,8 +221,8 @@ class ItemViewController: UIViewController {
         let labels: [Label] = []
 
         guard let currentItem = self.item else {
-            if let newItem = ToodleLib.sharedInstance.list.createItem(withName: description, dueDate: dueDate, completionDate: nil, labels: labels) {
-                self.delegate?.itemSaveSuccess(item: newItem)
+            if let item = ToodleLib.sharedInstance.list.createItem(withName: description, dueDate: dueDate, completionDate: nil, labels: labels) {
+                self.delegate?.itemCreated(item: item)
             }
             return
         }
@@ -236,7 +236,7 @@ class ItemViewController: UIViewController {
 //        } else {
 //            ToodleLib.sharedInstance.list.add(item: currentItem, toCategory: category)
 //        }
-        self.delegate?.itemSaveSuccess(item: currentItem)
+        self.delegate?.itemUpdated(item: currentItem)
     }
 
 }
