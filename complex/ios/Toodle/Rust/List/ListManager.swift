@@ -3,33 +3,88 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import Foundation
+import UIKit
 
 class ListManager: RustObject {
-    let raw: OpaquePointer
+    var raw: OpaquePointer
 
     required init(raw: OpaquePointer) {
         self.raw = raw
     }
 
-    func allCategories() -> [Category] {
-        let categories = get_all_categories(self.raw)
-        var allCategories: [Category] = []
-        for index in 0..<category_list_count(categories) {
-            let category = Category(raw: category_list_item_at(categories, index))
-            allCategories.append(category)
+    func intoRaw() -> OpaquePointer {
+        return self.raw
+    }
+
+//    deinit {
+//        list_manager_destroy(raw)
+//    }
+
+    fileprivate func toPointerArray(list: [RustObject]) -> OpaquePointer {
+        var pointerArray = list.map({ $0.intoRaw() })
+        return OpaquePointer(AutoreleasingUnsafeMutablePointer<[OpaquePointer]>(&pointerArray))
+    }
+
+    func allItems() -> [Item] {
+        let items = list_manager_get_all_items(self.raw)
+        var allItems: [Item] = []
+        for index in 0..<item_list_count(items) {
+            let item = Item(raw: item_list_entry_at(items, index)!)
+            allItems.append(item)
         }
-        return allCategories
+        return allItems
     }
 
-    func createCategory(withName name: String) -> Category {
-        return Category(raw: category_new(self.raw, name))
+    func allLabels() -> [Label] {
+        let labels = list_manager_get_all_labels(self.raw)
+        var allLabels: [Label] = []
+        for index in 0..<label_list_count(labels) {
+            let label = Label(raw: label_list_entry_at(labels, index))
+            allLabels.append(label)
+        }
+        return allLabels
     }
 
-    func add(item: Item, toCategory category: Category) {
-        category_manager_create_item(raw, item.raw, category.id)
+    func createLabel(withName name: String, color: UIColor) -> Label {
+        return Label(raw: list_manager_create_label(self.raw, name, color.toHex()!))
     }
 
-    func update(item: Item) throws {
-        category_manager_update_item(raw, item.raw)
+    func createItem(withName name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) -> Item? {
+        var dd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        if let due = dueDate{
+            var d = due.asInt64Timestamp()
+            dd = AutoreleasingUnsafeMutablePointer<Int64>(&d)
+        }
+        var cd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        if let completion = completionDate {
+            var c = completion.asInt64Timestamp()
+            cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
+        }
+        var pointerArray = self.toPointerArray(list: labels as [RustObject])
+        return Item(raw: list_manager_create_item(self.raw,
+                                  name,
+                                  dd,
+                                  cd,
+                                  UnsafeMutablePointer<OpaquePointer>(&pointerArray)))
+    }
+
+    func update(item: Item, name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) {
+        var dd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        if let due = dueDate{
+            var d = due.asInt64Timestamp()
+            dd = AutoreleasingUnsafeMutablePointer<Int64>(&d)
+        }
+        var cd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        if let completion = completionDate {
+            var c = completion.asInt64Timestamp()
+            cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
+        }
+        var pointerArray = self.toPointerArray(list: labels as [RustObject])
+        list_manager_update_item(raw,
+                                 item.raw,
+                                 name,
+                                 dd,
+                                 cd,
+                                 UnsafeMutablePointer<OpaquePointer>(&pointerArray))
     }
 }

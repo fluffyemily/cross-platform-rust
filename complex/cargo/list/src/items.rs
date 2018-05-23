@@ -34,7 +34,19 @@ pub struct Item {
 
 impl Drop for Item {
     fn drop(&mut self) {
-        println!("{:?} is being deallocated", self);
+        // println!("Item {:?} is being deallocated", self.uuid);
+    }
+}
+
+impl Item {
+    pub fn new(uuid: String, name: String, due_date: Option<Timespec>, completion_date: Option<Timespec>, labels: Vec<Label>) -> Self {
+        Item {
+            uuid: uuid,
+            name: name,
+            due_date: due_date,
+            completion_date: completion_date,
+            labels: labels
+        }
     }
 }
 
@@ -57,8 +69,15 @@ pub unsafe extern "C" fn item_destroy(item: *mut Item) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn item_get_uuid(item: *const Item) -> *mut c_char {
+    let item = &*item;
+    string_to_c_char(item.uuid.clone())
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn item_get_name(item: *const Item) -> *mut c_char {
     let item = &*item;
+    println!("returning {:?} for item.name", item.name);
     string_to_c_char(item.name.clone())
 }
 
@@ -134,13 +153,12 @@ pub unsafe extern "C" fn item_labels_count(item: *const Item) -> c_int {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn item_label_at(label_list: *const Vec<Label>, index: size_t) -> *const Label {
-    let label_list = &*label_list;
+pub unsafe extern "C" fn item_label_at(item: *const Item, index: c_int) -> *mut Label {
+    let item = &*item;
     let index = index as usize;
-    let label = Box::new(label_list[index].clone());
-    Box::into_raw(label)
+    let item = Box::new(item.labels[index].clone());
+    Box::into_raw(item)
 }
-
 
 #[cfg(test)]
 mod test {

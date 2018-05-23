@@ -5,66 +5,56 @@
 import UIKit
 
 protocol ToDoListItemsViewControllerDelegate {
-    func itemSaveSuccess(item: Item)
+    func itemCreated(item: Item)
+    func itemUpdated(item: Item)
 }
 
 class ToDoListItemsTableViewController: UITableViewController {
 
-    var category: Category
-
-    init(category: Category) {
-        self.category = category
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    var items: [Item]!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.title = category.name
+        self.items = ToodleLib.sharedInstance.list.allItems()
+
+        self.title = "All Items"
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newItem))
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
         return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return category.items.count
+        return self.items.count
     }
 
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "ItemCell")
-        let item = self.category.items[indexPath.row]
-        cell.textLabel?.text = item.description
+        let item = self.items[indexPath.row]
+        cell.textLabel?.text = item.name
         cell.detailTextLabel?.text = item.dueDateAsString()
-        // Configure the cell...
 
         return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let item = self.category.items[indexPath.row]
-        let itemVC = ItemViewController(item: item, category: self.category)
+        let item = self.items[indexPath.row]
+        let itemVC = ItemViewController(item: item)
         itemVC.delegate = self
         self.navigationController?.pushViewController(itemVC, animated: true)
     }
 
     @objc fileprivate func newItem() {
-        let itemVC = ItemViewController(category: self.category)
+        let itemVC = ItemViewController()
         itemVC.delegate = self
         let navController = UINavigationController(rootViewController: itemVC)
         self.present(navController, animated: true, completion: nil)
@@ -73,10 +63,17 @@ class ToDoListItemsTableViewController: UITableViewController {
 }
 
 extension ToDoListItemsTableViewController: ToDoListItemsViewControllerDelegate {
-    func itemSaveSuccess(item: Item) {
-        if !self.category.items.contains(where: {  $0.id == item.id }) {
-            self.category.add_item(item: item)
+    func itemCreated(item: Item) {
+        self.items.append(item)
+        self.tableView.reloadData()
+    }
+
+    func itemUpdated(item: Item) {
+        guard let index = self.items.index(where: { i in item.uuid == i.uuid }) else {
+            return itemCreated(item: item)
         }
+        self.items[index] = item
+        self.items = ToodleLib.sharedInstance.list.allItems()
         self.tableView.reloadData()
     }
 }

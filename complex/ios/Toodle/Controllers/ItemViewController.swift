@@ -70,26 +70,23 @@ class ItemViewController: UIViewController {
     var dueDatePickerTopAnchorConstraint: NSLayoutConstraint?
 
     var item:Item?
-    var category: Category
 
-    init(category: Category) {
-        self.category = category
+    init() {
         super.init(nibName: nil, bundle: nil)
         self.markComplete(isComplete: false)
         self.dueDateButton.setTitle("Set", for: .normal)
     }
 
-    init(item: Item, category: Category) {
-        self.category = category
+    init(item: Item) {
         self.item = item
         super.init(nibName: nil, bundle: nil)
 
-        self.descriptionField.text = item.description
+        self.descriptionField.text = item.name
         if let dueDate = item.dueDate {
             self.dueDateButton.setTitle(self.dateAsString(date: dueDate), for: .normal)
             self.dueDatePicker.date = dueDate
         }
-        self.markComplete(isComplete: !item.isComplete)
+        self.markComplete(isComplete: false)
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -217,20 +214,29 @@ class ItemViewController: UIViewController {
             return self.descriptionField.layer.borderColor = UIColor.red.cgColor
         }
 
-        let currentItem = self.item ?? Item()
-
-        currentItem.description = description
+        var dueDate: Date? = nil
         if self.dueDateButton.titleLabel?.text != "Set" {
-            currentItem.dueDate = self.dueDatePicker.date
+            dueDate = self.dueDatePicker.date
         }
-        currentItem.isComplete = (self.statusValueLabel.text ?? "") != "Complete"
+        let labels: [Label] = []
 
-        if let _ = currentItem.id {
-            try? ToodleLib.sharedInstance.list.update(item: currentItem)
-        } else {
-            ToodleLib.sharedInstance.list.add(item: currentItem, toCategory: category)
+        guard let currentItem = self.item else {
+            if let item = ToodleLib.sharedInstance.list.createItem(withName: description, dueDate: dueDate, completionDate: nil, labels: labels) {
+                self.delegate?.itemCreated(item: item)
+            }
+            return
         }
-        self.delegate?.itemSaveSuccess(item: currentItem)
+
+        ToodleLib.sharedInstance.list.update(item: currentItem, name: description, dueDate: dueDate, completionDate: nil, labels: labels)
+        currentItem.name = description
+//        currentItem.isComplete = (self.statusValueLabel.text ?? "") != "Complete"
+
+//        if let _ = currentItem.id {
+//            try? ToodleLib.sharedInstance.list.update(item: currentItem)
+//        } else {
+//            ToodleLib.sharedInstance.list.add(item: currentItem, toCategory: category)
+//        }
+        self.delegate?.itemUpdated(item: currentItem)
     }
 
 }

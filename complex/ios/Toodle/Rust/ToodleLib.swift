@@ -19,6 +19,10 @@ class ToodleLib: RustObject {
         self.raw = raw
     }
 
+    func intoRaw() -> OpaquePointer {
+        return self.raw
+    }
+
     convenience init() {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let documentsURL = paths[0]
@@ -28,10 +32,6 @@ class ToodleLib: RustObject {
 
     deinit {
         toodle_destroy(raw)
-    }
-
-    var logins: LoginManager {
-        return LoginManager(raw: toodle_logins(self.raw));
     }
 
     var list: ListManager {

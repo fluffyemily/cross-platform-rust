@@ -6,4 +6,5 @@ import Foundation
 
 protocol RustObject {
     init(raw: OpaquePointer)
+    func intoRaw() -> OpaquePointer
 }
