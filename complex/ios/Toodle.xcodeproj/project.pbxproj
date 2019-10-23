@@ -200,6 +200,7 @@
 				TargetAttributes = {
 					7B9F010B1F794DB1000407E5 = {
 						CreatedOnToolsVersion = 9.0;
+						LastSwiftMigration = 1030;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -396,7 +397,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.mozilla.Toodle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Toodle/Toodle-Bridging-Header.h";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -413,7 +414,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.mozilla.Toodle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Toodle/Toodle-Bridging-Header.h";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

@@ -4,7 +4,7 @@
 
 import Foundation
 
-class Item: RustObject {
+final class Item: RustObject {
     var raw: OpaquePointer
 
     required init(raw: OpaquePointer) {
@@ -32,7 +32,8 @@ class Item: RustObject {
         }
     }
 
-    var dueDate: Date? {
+    var dueDate: Date?
+    {
         get {
             guard let date = item_get_due_date(raw) else {
                 return nil
@@ -43,12 +44,13 @@ class Item: RustObject {
             if let d = newValue {
                 let timestamp = d.timeIntervalSince1970
                 var date = Int64(timestamp)
-                item_set_due_date(raw, AutoreleasingUnsafeMutablePointer<Int64>(&date))
+                item_set_due_date(raw, UnsafeMutablePointer<Int64>(&date))
             }
         }
     }
 
-    var completionDate: Date? {
+    var completionDate: Date?
+    {
         get {
             guard let date = item_get_completion_date(raw) else {
                 return nil
@@ -59,7 +61,7 @@ class Item: RustObject {
             if let d = newValue {
                 let timestamp = d.timeIntervalSince1970
                 var date = Int64(timestamp)
-                item_set_completion_date(raw, AutoreleasingUnsafeMutablePointer<Int64>(&date))
+                item_set_completion_date(raw, UnsafeMutablePointer<Int64>(&date))
             }
         }
     }
