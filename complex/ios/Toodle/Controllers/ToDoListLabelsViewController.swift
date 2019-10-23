@@ -33,7 +33,7 @@ class ToDoListLabelsViewController: UITableViewController {
         self.title = "Toodle"
         labels = self.dbStore.list.allLabels()
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ListCell")
-         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newLabel))
+         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.add, target: self, action: #selector(newLabel))
     }
 
     override func didReceiveMemoryWarning() {

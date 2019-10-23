@@ -19,7 +19,7 @@ class ToDoListItemsTableViewController: UITableViewController {
         self.items = ToodleLib.sharedInstance.list.allItems()
 
         self.title = "All Items"
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(newItem))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.add, target: self, action: #selector(newItem))
     }
 
     override func didReceiveMemoryWarning() {
@@ -69,7 +69,7 @@ extension ToDoListItemsTableViewController: ToDoListItemsViewControllerDelegate 
     }
 
     func itemUpdated(item: Item) {
-        guard let index = self.items.index(where: { i in item.uuid == i.uuid }) else {
+        guard let index = self.items.firstIndex(where: { i in item.uuid == i.uuid }) else {
             return itemCreated(item: item)
         }
         self.items[index] = item

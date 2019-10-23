@@ -5,7 +5,7 @@
 import Foundation
 import UIKit
 
-class ListManager: RustObject {
+final class ListManager: RustObject {
     var raw: OpaquePointer
 
     required init(raw: OpaquePointer) {
@@ -22,7 +22,7 @@ class ListManager: RustObject {
 
     fileprivate func toPointerArray(list: [RustObject]) -> OpaquePointer {
         var pointerArray = list.map({ $0.intoRaw() })
-        return OpaquePointer(AutoreleasingUnsafeMutablePointer<[OpaquePointer]>(&pointerArray))
+        return OpaquePointer(UnsafeMutablePointer<[OpaquePointer]>(&pointerArray)) //
     }
 
     func allItems() -> [Item] {
@@ -50,15 +50,15 @@ class ListManager: RustObject {
     }
 
     func createItem(withName name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) -> Item? {
-        var dd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        var dd: UnsafeMutablePointer<Int64>? = nil
         if let due = dueDate{
             var d = due.asInt64Timestamp()
-            dd = AutoreleasingUnsafeMutablePointer<Int64>(&d)
+            dd = UnsafeMutablePointer<Int64>(&d)
         }
-        var cd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        var cd: UnsafeMutablePointer<Int64>? = nil
         if let completion = completionDate {
             var c = completion.asInt64Timestamp()
-            cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
+            cd = UnsafeMutablePointer<Int64>(&c)
         }
         var pointerArray = self.toPointerArray(list: labels as [RustObject])
         return Item(raw: list_manager_create_item(self.raw,
@@ -66,18 +66,20 @@ class ListManager: RustObject {
                                   dd,
                                   cd,
                                   UnsafeMutablePointer<OpaquePointer>(&pointerArray)))
+return nil
+        
     }
 
     func update(item: Item, name: String, dueDate: Date?, completionDate: Date?, labels: [Label]) {
-        var dd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        var dd: UnsafeMutablePointer<Int64>? = nil
         if let due = dueDate{
             var d = due.asInt64Timestamp()
-            dd = AutoreleasingUnsafeMutablePointer<Int64>(&d)
+            dd = UnsafeMutablePointer<Int64>(&d)
         }
-        var cd: AutoreleasingUnsafeMutablePointer<Int64>? = nil
+        var cd: UnsafeMutablePointer<Int64>? = nil
         if let completion = completionDate {
             var c = completion.asInt64Timestamp()
-            cd = AutoreleasingUnsafeMutablePointer<Int64>(&c)
+            cd = UnsafeMutablePointer<Int64>(&c)
         }
         var pointerArray = self.toPointerArray(list: labels as [RustObject])
         list_manager_update_item(raw,
@@ -86,5 +88,7 @@ class ListManager: RustObject {
                                  dd,
                                  cd,
                                  UnsafeMutablePointer<OpaquePointer>(&pointerArray))
+
+        
     }
 }

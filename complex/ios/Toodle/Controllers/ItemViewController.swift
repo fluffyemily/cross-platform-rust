@@ -41,7 +41,7 @@ class ItemViewController: UIViewController {
         let datePicker = UIDatePicker()
         datePicker.datePickerMode = .dateAndTime
         datePicker.minimumDate = Date()
-        datePicker.addTarget(self, action: #selector(datePickerValueDidChange), for: UIControlEvents.valueChanged)
+        datePicker.addTarget(self, action: #selector(datePickerValueDidChange), for: UIControl.Event.valueChanged)
         return datePicker
     }()
 
@@ -107,12 +107,12 @@ class ItemViewController: UIViewController {
 
         if self.item == nil {
             self.title = "New Item"
-            self.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.cancel, target: self, action: #selector(close))
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.cancel, target: self, action: #selector(close))
         } else {
             self.title = "Edit Item"
         }
 
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.done, target: self, action: #selector(done))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.done, target: self, action: #selector(done))
 
         var constraints = [NSLayoutConstraint]()
 
